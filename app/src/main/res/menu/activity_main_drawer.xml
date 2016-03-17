@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_where_is_the_bus"
+            android:icon="@drawable/ic_gps"
+            android:title="@string/nav_where_is_the_bus" />
+        <item
+            android:id="@+id/nav_routes_times"
+            android:icon="@drawable/ic_schedule"
+            android:title="@string/nav_routes_times" />
+        <item
+            android:id="@+id/nav_alarm"
+            app:actionLayout="@layout/nav_alarm_switch"
+            android:icon="@drawable/ic_alarm"
+            android:title="@string/nav_alarm" />
+        <item
+            android:id="@+id/nav_faq"
+            android:icon="@drawable/ic_faq"
+            android:title="@string/nav_faq" />
+    </group>
+
+</menu>

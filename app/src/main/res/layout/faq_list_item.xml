@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/colorPrimary"
+    >
+
+    <TextView
+        android:id="@+id/lblListItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/list_item_small_margin"
+        android:layout_marginRight="@dimen/list_item_small_margin"
+        android:paddingTop="@dimen/list_item_small_margin"
+        android:paddingBottom="@dimen/list_item_small_margin"
+        android:paddingLeft="@dimen/list_item_large_margin"
+        android:paddingRight="@dimen/list_item_large_margin"
+        android:textSize="@dimen/list_item_small_text_size"
+        android:textColor="@color/colorAccent"
+        android:background="@drawable/rounded_view_faq_list_item"/>
+
+</LinearLayout>

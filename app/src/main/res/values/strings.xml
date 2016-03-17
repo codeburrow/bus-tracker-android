@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">BusTracker-ACG</string>
+
+    <!-- Google App ID-->
+    <string name="google_app_id">bustracker-acg</string>
+
+    <!--  Images Descriptions -->
+    <string name="desc_splash_icon">Splash Image</string>
+    <string name="splash_secret_txt">Bus Tracker</string>
+
+    <!-- Drawer-->
+    <string name="navigation_drawer_header">DEREE - Bus Tracker</string>
+    <string name="nav_where_is_the_bus">Where is the bus?</string>
+    <string name="nav_routes_times">Routes &amp; Times</string>
+    <string name="nav_alarm">Alarm</string>
+    <string name="nav_faq">FAQ</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+</resources>

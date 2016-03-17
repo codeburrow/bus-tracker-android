@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <fragment
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:id="@+id/where_is_the_bus_map"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <ImageButton
+        android:id="@+id/choose_route_button"
+        android:layout_margin="@dimen/list_item_large_margin"
+        android:padding="@dimen/list_item_large_margin"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/choose_route_button_states"
+        android:background="#AAE7D9B4"/>
+
+</RelativeLayout>
