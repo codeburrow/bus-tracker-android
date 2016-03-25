@@ -142,6 +142,23 @@ public class FaqFragment extends Fragment {
         Log.e(TAG, "onDetach()");
     }
 
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            //do when hidden
+            Log.e(TAG, "do when hidden");
+
+            // Collapse all the expanded groups when the fragment is hidden
+            for (int i = 0; i <= listAdapter.getGroupCount(); i++){
+                expandableListView.collapseGroup(i);
+            }
+
+        } else {
+            //do when show
+            Log.e(TAG, "do when show");
+        }
+    }
 
 
     // This method helps to setIndicatorBounds

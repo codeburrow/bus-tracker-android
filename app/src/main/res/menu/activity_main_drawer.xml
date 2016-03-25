@@ -22,4 +22,22 @@
             android:title="@string/nav_faq" />
     </group>
 
+    <item android:title="@string/nav_language">
+        <group
+            android:checkableBehavior="single">
+            <menu>
+                <item
+                    android:id="@+id/nav_greek"
+                    android:icon="@drawable/ic_greek"
+                    android:title="@string/nav_greek"
+                    android:checkable="false" />
+                <item
+                    android:id="@+id/nav_english"
+                    android:icon="@drawable/ic_english"
+                    android:title="@string/nav_english"
+                    android:checkable="false" />
+            </menu>
+        </group>
+    </item>
+
 </menu>

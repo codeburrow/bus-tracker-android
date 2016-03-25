@@ -14,6 +14,9 @@
     <string name="nav_routes_times">Routes &amp; Times</string>
     <string name="nav_alarm">Alarm</string>
     <string name="nav_faq">FAQ</string>
+    <string name="nav_language">Select Language</string>
+    <string name="nav_greek">greek</string>
+    <string name="nav_english">english</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
