@@ -155,8 +155,8 @@ public class FaqFragment extends Fragment {
             }
 
         } else {
-            //do when show
-            Log.e(TAG, "do when show");
+            //do when shown
+            Log.e(TAG, "do when shown");
         }
     }
 

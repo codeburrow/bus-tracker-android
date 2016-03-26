@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.PopupMenu;
@@ -32,8 +33,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallback {
@@ -42,7 +47,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     protected static final String TAG = "WITB Fragment";
     // Route Names for the popup menu
     private ArrayList<String> routeNames;
-    // Selected RouteID - by default is 1
+    // Selected RouteName
     private String routeShown;
     // Google Map
     GoogleMap gMap;
@@ -56,6 +61,11 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
             .build();
     // Marker
     Marker marker;
+    // Timer & TimerTask
+    Timer timer;
+    TimerTask timerTask;
+    // Handler to be used in TimerTask
+    final Handler handler = new Handler();
 
     /*
     Every fragment must have a default empty constructor.
@@ -76,6 +86,13 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         Log.e(TAG, "onAttach()");
     }
 
+
+    /*
+        When overriding these lifecycle methods
+        —  with the exception of onCreateView()
+        — you MUST call through to the super class’s implementation of the method.
+        Otherwise, an exception occurs at run-time.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +110,9 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         } else {
             routeNames = db.getAllRouteNamesENG();
         }
+
+        // Selected Route - by default the first in the routeNames
+        routeShown = routeNames.get(0);
 
     }
 
@@ -124,8 +144,8 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
                         // Update the routeShown
                         routeShown = item.toString();
                         // AsyncTask to get the appropriate route's coordinates
-                        GetCoordinatesAsyncTask getCoordinatesAsyncTask = new GetCoordinatesAsyncTask();
-                        getCoordinatesAsyncTask.execute();
+//                        GetCoordinatesAsyncTask getCoordinatesAsyncTask = new GetCoordinatesAsyncTask();
+//                        getCoordinatesAsyncTask.execute();
 
                         return true;
                     }
@@ -161,6 +181,9 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     public void onResume() {
         super.onResume();
         Log.e(TAG, "onResume()");
+
+        // Start the Timer on resume
+        startTimer();
     }
 
     @Override
@@ -173,6 +196,9 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     public void onStop() {
         super.onStop();
         Log.e(TAG, "onStop()");
+
+        // Stop the Timer
+        stopTimer();
     }
 
     @Override
@@ -193,13 +219,28 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         Log.e(TAG, "onDetach()");
     }
 
-    /*
-    When overriding these lifecycle methods
-     —  with the exception of onCreateView()
-     — you MUST call through to the super class’s implementation of the method.
-    Otherwise, an exception occurs at run-time.
-     */
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            //do when hidden
+            Log.e(TAG, "do when hidden");
 
+            // Stop the Timer
+            stopTimer();
+        } else {
+            //do when shown
+            Log.e(TAG, "do when shown");
+
+            // Start the Timer
+            startTimer();
+        }
+    }
+
+
+    /*
+        Google Maps
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         gMapReady = true;
@@ -216,7 +257,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         gMap.animateCamera(CameraUpdateFactory.newCameraPosition(target), 2000, null);
     }
 
-    private void setMarker(LatLng latLng){
+    private void setMarker(LatLng latLng) {
         marker = gMap.addMarker(new MarkerOptions().position(latLng));
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
         moveTo(CameraPosition.builder()
@@ -226,6 +267,63 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
                 .tilt(0)
                 .build());
     }
+
+
+    /*
+        TimerTask
+     */
+    public void startTimer() {
+        // Set a new Timer
+        timer = new Timer();
+
+        // Initialize the TimerTask's job
+        initializeTimerTask();
+
+        // Schedule the timer -- After the first 0ms the TimerTask will run every 2000ms
+        timer.schedule(timerTask, 0, 2000); //
+
+        Log.e(TAG, "Timer started.. ");
+    }
+
+    public void stopTimer() {
+        // Stop the timer
+        // if it's not already null
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+
+        Log.e(TAG, "Timer stopped.. ");
+    }
+
+
+    public void initializeTimerTask() {
+
+        timerTask = new TimerTask() {
+            public void run() {
+                // Use a handler to run a toast that shows the current timestamp
+                handler.post(new Runnable() {
+                    public void run() {
+                        /*
+                            Debug
+                         */
+                        //get the current timeStamp
+                        Calendar calendar = Calendar.getInstance();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd:MMMM:yyyy HH:mm:ss a");
+                        final String strDate = simpleDateFormat.format(calendar.getTime());
+                        // LOG
+                        Log.e(TAG, strDate);
+
+                        // Execute the GetCoordinatesAsyncTask
+                        GetCoordinatesAsyncTask getCoordinatesAsyncTask = new GetCoordinatesAsyncTask();
+                        getCoordinatesAsyncTask.execute();
+                    }
+                });
+            }
+        };
+
+    }
+
 
     // Async Task to get the coordinates of the appropriate route
     private class GetCoordinatesAsyncTask extends AsyncTask<Void, Void, LatLng> {

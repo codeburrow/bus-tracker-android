@@ -231,6 +231,8 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
 
         // Closing database connection
         db.close();
+        // Closing cursor
+        cursor.close();
 
         return routeNameGR;
     }
@@ -253,6 +255,8 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
 
         // Closing database connection
         db.close();
+        // Closing cursor
+        cursor.close();
 
         return routeID;
     }
@@ -303,6 +307,8 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
 
         // Closing database connection
         db.close();
+        // Closing cursor
+        cursor.close();
 
         return routeNameENG;
     }
@@ -325,6 +331,8 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
 
         // Closing database connection
         db.close();
+        // Closing cursor
+        cursor.close();
 
         return routeID;
     }

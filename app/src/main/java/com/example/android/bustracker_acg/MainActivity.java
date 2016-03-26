@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, RoutesTimesFragment.OnExpandableListItemSelectedListener{
 
@@ -38,6 +40,9 @@ public class MainActivity extends AppCompatActivity
     SharedPreferences.Editor editor;
     // back pressed flag
     private boolean doubleBackToExitPressedOnce = false;
+    // Database Helper
+    public final BusTrackerDBHelper db = new BusTrackerDBHelper(this);
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -199,6 +204,7 @@ public class MainActivity extends AppCompatActivity
 
     // update fragments when language changes
     protected void restartActivity(){
+        Log.e(TAG, "Ready to Restart");
         try {
             Thread.sleep(100);
         } catch (InterruptedException e){
