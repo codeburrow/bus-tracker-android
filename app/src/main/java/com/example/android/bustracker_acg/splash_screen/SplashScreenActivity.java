@@ -64,8 +64,6 @@ public class SplashScreenActivity extends AppCompatActivity {
             SplashAsyncTask splashAsyncTask = new SplashAsyncTask();
             splashAsyncTask.execute();
         } catch (SQLiteException e) { // the database must be created
-//            DbUpdateAsyncTask dbUpdateAsyncTask = new DbUpdateAsyncTask();
-//            dbUpdateAsyncTask.execute();
             GetSizeAndDownloadAsyncTask getSizeAndDownloadAsyncTask = new GetSizeAndDownloadAsyncTask();
             getSizeAndDownloadAsyncTask.execute();
         }

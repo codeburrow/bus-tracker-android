@@ -1,15 +1,18 @@
 package com.example.android.bustracker_acg;
 
 import android.app.Activity;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TimePicker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -22,12 +25,14 @@ public class AlarmFragment extends Fragment {
 
     // LOG_TAG
     protected static final String TAG = "Alarm Fragment";
-    // TimePickerFragment
-//    private TimePickerFragment timePickerFragment;
     // Construct the data source
-    ArrayList<Calendar> calendars = new ArrayList<Calendar>();
+    ArrayList<String> alarms = new ArrayList<String>();
     // AlarmListAdapter
     static AlarmListAdapter alarmListAdapter;
+    // Hour and Minute
+    private int mHours;
+    private int mMinutes;
+
 
 
     // Every fragment must have a default empty constructor.
@@ -49,7 +54,14 @@ public class AlarmFragment extends Fragment {
         Log.e(TAG, "onCreate()");
 
         // Create the adapter to convert the array to views
-        alarmListAdapter = new AlarmListAdapter(getActivity(), calendars);
+        alarmListAdapter = new AlarmListAdapter(getActivity(), alarms);
+
+        // Get a Calendar instance
+        final Calendar calendar = Calendar.getInstance();
+        // Get the current time
+        mHours = calendar.get(Calendar.HOUR_OF_DAY);
+        mMinutes = calendar.get(Calendar.MINUTE);
+
     }
 
     @Nullable
@@ -73,11 +85,19 @@ public class AlarmFragment extends Fragment {
         ImageButton createAlarmButton = (ImageButton) view.findViewById(R.id.create_alarm_button);
         createAlarmButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
 
+                //  Show our TimePicker dialog
+                new TimePickerDialog(getActivity(),
+                        TimePickerDialog.THEME_DEVICE_DEFAULT_DARK,
+                        mTimeSetListener,
+                        mHours,
+                        mMinutes,
+                        DateFormat.is24HourFormat(getActivity())).show();
 
             }
         });
+
 
     }
 
@@ -149,49 +169,44 @@ public class AlarmFragment extends Fragment {
     }
 
 
-//    public static class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener{
-//
-//        private int selectedHours;
-//        private int selectedMinutes;
-//
-//        final Calendar calendar = Calendar.getInstance();
-//
-//        @Override
-//        public Dialog onCreateDialog(Bundle savedInstanceState){
-//
-//            // Use the current time as the default values for the time picker
-//            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-//            int minute = calendar.get(Calendar.MINUTE);
-//
-//            // Create and return a new instance of TimePickerDialog
-//            TimePickerDialog timePickerDialog = new TimePickerDialog(getActivity(), TimePickerDialog.THEME_DEVICE_DEFAULT_DARK,this, hour, minute,
-//                    DateFormat.is24HourFormat(getActivity()));
-//            timePickerDialog.setTitle("Set your own alarm");
-//            return timePickerDialog;
-//        }
-//
-//        //onTimeSet() callback method
-//        public void onTimeSet(TimePicker view, int hourOfDay, int minute){
-//            // Do something with the user chosen time
-//            selectedHours = hourOfDay;
-//            selectedMinutes = minute;
-//
-//
-////            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-////            calendar.set(Calendar.MINUTE, minute);
-////            // Add it to listAdapter
-////            alarmListAdapter.add(calendar);
-//        }
-//
-//        public int getSelectedHours(){
-//            return selectedHours;
-//        }
-//
-//        public int getSelectedMinutes(){
-//            return selectedMinutes;
-//        }
-//
-//    }
+    // the callback received when the user "sets" the time in the dialog
+    private TimePickerDialog.OnTimeSetListener mTimeSetListener =
+            new TimePickerDialog.OnTimeSetListener() {
+                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                    // Method onTimeSet() is called once when dialog is dismissed
+                    // and is called twice when Done button is clicked.
+                    // So we have to use the method below
+                    if (view.isShown()) {
+                        // This method will return true only once
+                        mHours = hourOfDay;
+                        mMinutes = minute;
+                        updateAdapter();
+                    }
+                }
+            };
 
+    // updates the time we display in the TextView
+    private void updateAdapter() {
+        alarmListAdapter.add(
+                new StringBuilder()
+                        .append(pad(mHours)).append(":")
+                        .append(pad(mMinutes)).toString());
+        alarmListAdapter.notifyDataSetChanged();
+    }
+
+
+    /**
+     * @param c
+     * @return the appropriate String representation of the hour or minute.
+     *
+     * The pad() method that we called from the updateDisplay()
+     * It will prefix a zero to the number if it's a single digit
+     */
+    private static String pad(int c) {
+        if (c >= 10)
+            return String.valueOf(c);
+        else
+            return "0" + String.valueOf(c);
+    }
 
 }
