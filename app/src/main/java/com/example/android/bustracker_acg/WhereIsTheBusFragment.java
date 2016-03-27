@@ -2,6 +2,7 @@ package com.example.android.bustracker_acg;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -66,6 +68,18 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     TimerTask timerTask;
     // Handler to be used in TimerTask
     final Handler handler = new Handler();
+    // ArrayLists
+    private String routeName;
+    private ArrayList<String> stationPointNames;
+    private ArrayList<String> stationPointTimes;
+    private ArrayList<LatLng> stationPointLatLngs;
+    private ArrayList<LatLng> snappedPointLatLngs;
+    // markers list
+    private ArrayList<Marker> markers = new ArrayList<>();
+    // Route Polyline
+    PolylineOptions routePolyline;
+    // Language selected
+    String language;
 
     /*
     Every fragment must have a default empty constructor.
@@ -101,7 +115,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         // Check SharedPreferences for the language
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.PREFS_FILE, Activity.MODE_PRIVATE);
         // get the language
-        String language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
+        language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
         // Database Helper
         BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
 
@@ -137,20 +151,19 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
                 for (int i = 0; i < routeNames.size(); i++) {
                     popupMenu.add(routeNames.get(i));
                 }
-                popupMenu.getItem(0).setChecked(true);
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         // Update the routeShown
                         routeShown = item.toString();
-                        // AsyncTask to get the appropriate route's coordinates
-//                        GetCoordinatesAsyncTask getCoordinatesAsyncTask = new GetCoordinatesAsyncTask();
-//                        getCoordinatesAsyncTask.execute();
-
+                        // AsyncTask to get the appropriate routeStops and Polyline
+                        PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
+                        prepareDataAsyncTask.execute();
                         return true;
                     }
                 });
                 popup.show();
+
             }
         });
 
@@ -246,6 +259,10 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         gMapReady = true;
         gMap = googleMap;
 
+        // Default Polyline and Markers - routeStops
+        PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
+        prepareDataAsyncTask.execute();
+
         moveTo(DEREE);
     }
 
@@ -266,6 +283,20 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
                 .bearing(0)
                 .tilt(0)
                 .build());
+    }
+
+    /**
+     * @param latlng - the (latitude, longitude) of the station - marker
+     * @param title - the name of the station (RouteStop)
+     * @param snippet - the time of the RouteStop and the routeName
+     */
+    public void addMarkerToMap(LatLng latlng, String title, String snippet){
+        Marker marker = gMap.addMarker(new MarkerOptions()
+                        .position(latlng)
+                        .title(title)
+                        .snippet(snippet)
+        );
+        markers.add(marker);
     }
 
 
@@ -341,10 +372,6 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
             int success;
             // Database Helper
             BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
-            // Check SharedPreferences for the language
-            SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.PREFS_FILE, Activity.MODE_PRIVATE);
-            // Get the language
-            String language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
             // JSON Parser
             JSONParser jsonParser = new JSONParser();
 
@@ -406,6 +433,69 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     }
 
 
+    private class PrepareDataAsyncTask extends
+            AsyncTask<Void, Void, Void> {
+
+        // LOG TAG
+        private static final String TAG = "PrepareDataAsyncTask";
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            // Database Helper
+            BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
+            // roueID
+            int routeID;
+
+            if (language.equals(MainActivity.GR)) {
+                routeID = db.getRouteID_byNameGR(routeShown);
+                routeName = db.getRouteNameGR_byID(routeID);
+                stationPointNames = db.getAllRouteStopNamesGR(routeID);
+            } else {
+                routeID = db.getRouteID_byNameENG(routeShown);
+                routeName = db.getRouteNameENG_byID(routeID);
+                stationPointNames = db.getAllRouteStopNamesENG(routeID);
+            }
+
+            stationPointTimes = db.getAllRouteStopTimes(routeID);
+            stationPointLatLngs = db.getAllRouteStopLatLngs(routeID);
+            snappedPointLatLngs = db.getAllSnappedPointLatLngs(routeID);
+
+            // Test
+            Log.e(TAG, routeName);
+            Log.e(TAG, stationPointNames.size() + stationPointNames.toString());
+            Log.e(TAG, stationPointTimes.size() + stationPointTimes.toString());
+            Log.e(TAG, stationPointLatLngs.size() + stationPointLatLngs.toString());
+            Log.e(TAG, snappedPointLatLngs.size() + snappedPointLatLngs.toString());
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            // Clear the map from all markers and polylines
+            gMap.clear();
+            // Clear the markers array list
+            markers.clear();
+
+            // Fill gMap with the stations of the route
+            int size = stationPointNames.size();
+            for (int i = 0; i < size; i++){
+                addMarkerToMap(stationPointLatLngs.get(i), stationPointNames.get(i), stationPointTimes.get(i) + " - " + routeName);
+            }
+
+            // Draw the polyline on gMap
+            size = snappedPointLatLngs.size();
+            routePolyline = new PolylineOptions();
+            for (int j = 0; j < size; j++){
+                routePolyline.add(snappedPointLatLngs.get(j));
+            }
+            routePolyline.width(10).color(Color.RED);
+            gMap.addPolyline(routePolyline);
+
+        }
+    }
 
 
 }

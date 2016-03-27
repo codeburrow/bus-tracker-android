@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity
     private final WhereIsTheBusFragment whereIsTheBusFragment = new WhereIsTheBusFragment();
     private final RoutesTimesFragment routesTimesFragment = new RoutesTimesFragment();
     private final FaqFragment faqFragment = new FaqFragment();
+    private final AlarmFragment alarmFragment = new AlarmFragment();
     // SharedPreferences file name
     public static final String PREFS_FILE = "UserPreferencesFile";
     // sharedPreference key for language preference
@@ -151,7 +152,7 @@ public class MainActivity extends AppCompatActivity
                 displayRoutesTimes();
                 break;
             case R.id.nav_alarm:
-//                fragmentClass = AlarmFragment.class;
+                displayAlarm();
                 break;
             case R.id.nav_faq:
                 displayFAQ();
@@ -215,9 +216,9 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    // display Where Is The Bus Fragment
+    // Display Where Is The Bus Fragment
     protected void displayWhereIsTheBus() {
-        //Checking for fragment count on back stack
+        // Checking for fragment count on back stack
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
         }
@@ -231,17 +232,18 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.add(R.id.fragment_container, whereIsTheBusFragment);
         }
 
-        // Hide fragment faqFragment
-        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
+        // Hide the other added fragments
         if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
+        if (alarmFragment.isAdded()) { fragmentTransaction.hide(alarmFragment); }
+        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
 
         // Commit changes
         fragmentTransaction.commit();
     }
 
-    // display Routes Times Fragment
+    // Display Routes Times Fragment
     protected void displayRoutesTimes() {
-        //Checking for fragment count on back stack
+        // Checking for fragment count on back stack
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
         }
@@ -255,17 +257,43 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.add(R.id.fragment_container, routesTimesFragment);
         }
 
-        // Hide fragment faqFragment
-        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
+        // Hide the other added fragments
         if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
+        if (alarmFragment.isAdded()) { fragmentTransaction.hide(alarmFragment); }
+        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
 
         // Commit changes
         fragmentTransaction.commit();
     }
 
+    // Display Alarm Fragment
+    protected void displayAlarm() {
+        // Checking for fragment count on back stack
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+        }
 
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        if (alarmFragment.isAdded()){
+            // if the fragment is already in container
+            fragmentTransaction.show(alarmFragment);
+        } else {
+            // fragment needs to be added to frame container
+            fragmentTransaction.add(R.id.fragment_container, alarmFragment);
+        }
+
+        // Hide the other added fragments
+        if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
+        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
+        if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
+
+        // Commit changes
+        fragmentTransaction.commit();
+    }
+
+    // Display FAQ Fragment
     protected void displayFAQ() {
-        //Checking for fragment count on back stack
+        // Checking for fragment count on back stack
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
         }
@@ -279,9 +307,10 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.add(R.id.fragment_container, faqFragment);
         }
 
-        // Hide fragment faqFragment
+        // Hide the other added fragments
         if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
         if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
+        if (alarmFragment.isAdded()) { fragmentTransaction.hide(alarmFragment); }
 
         // Commit changes
         fragmentTransaction.commit();
@@ -290,12 +319,12 @@ public class MainActivity extends AppCompatActivity
     protected void displayRouteTimesMapFragment(int groupPosition, int childPosition) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
-        // Hide fragment faqFragment
-        if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
-        if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
-        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
+        // Hide routesTimesFragment
+        fragmentTransaction.hide(routesTimesFragment);
+//        if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
+//        if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
+//        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
 
-        // Commit changes
         RoutesTimesMapFragment mapFragment = new RoutesTimesMapFragment();
         Bundle args = new Bundle();
         args.putInt("groupPosition", groupPosition);
@@ -303,6 +332,7 @@ public class MainActivity extends AppCompatActivity
         mapFragment.setArguments(args);
 
         // Add the fragment to the 'activity_schedule' FrameLayout
+        // Commit changes
         fragmentTransaction
                 .add(R.id.fragment_container, mapFragment).addToBackStack(null).commit();
     }

@@ -8,22 +8,32 @@
     <dimen name="medium_text_size">30sp</dimen>
     <dimen name="large_text_size">40sp</dimen>
 
+    <!-- Minimum Button Size-->
+    <dimen name="minimum_clickable_height">48dp</dimen>
+    <dimen name="minimum_clickable_width">48dp</dimen>
+
     <!-- Margin-->
     <dimen name="small_margin">5dp</dimen>
     <dimen name="medium_margin">10dp</dimen>
     <dimen name="large_margin">15dp</dimen>
+    <dimen name="extra_large_margin">20dp</dimen>
 
     <!-- Padding-->
     <dimen name="small_padding">5dp</dimen>
     <dimen name="medium_padding">10dp</dimen>
     <dimen name="large_padding">15dp</dimen>
+    <dimen name="extra_large_padding">20dp</dimen>
 
 
     <!-- List Item dimensions. -->
     <dimen name="list_item_small_text_size">20sp</dimen>
+    <dimen name="list_item_medium_text_size">30sp</dimen>
+    <dimen name="list_item_large_text_size">40sp</dimen>
     <dimen name="list_item_divider">1dp</dimen>
     <dimen name="list_item_small_margin">5dp</dimen>
     <dimen name="list_item_large_margin">10dp</dimen>
+    <dimen name="list_item_small_padding">5dp</dimen>
+    <dimen name="list_item_large_padding">10dp</dimen>
 
 
     <!-- Default target placement radius for GlowPadView. Should be 1/2 of outerring diameter. -->
