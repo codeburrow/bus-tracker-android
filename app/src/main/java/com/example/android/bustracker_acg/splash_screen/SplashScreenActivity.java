@@ -42,7 +42,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         // secret text view
         secretTextView = (SecretTextView)findViewById(R.id.secret_text_view);
-        secretTextView.setDuration(3000);
+        secretTextView.setDuration(1000);
         secretTextView.setIsVisible(false);
         secretTextView.toggle();
 
@@ -108,11 +108,14 @@ public class SplashScreenActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             // Check for success tag
             int success;
-            // progress
+            // Progress
             int progress = 0;
 
-            // initialize the BusTrackerDBHelper
+            // Initialize the BusTrackerDBHelper
             db = new BusTrackerDBHelper(getApplicationContext());
+
+            // Add the auto alarm at ID = 1
+            db.addAlarm("auto", 1);
 
             try {
                 JSONObject json = jsonParser.getJSONFromUrl(GET_COORDINATES_URL);
@@ -322,7 +325,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             int i = 0;
             while (i <= 50) {
                 try {
-                    Thread.sleep(60);
+                    Thread.sleep(20);
                     publishProgress(i);
                     i++;
                 }

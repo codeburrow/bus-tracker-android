@@ -101,4 +101,25 @@ public class DatabaseContract {
 
     }
 
+
+    /*
+        Inner class that defines the table contents of the Alarms table
+     */
+    public static final class AlarmsEntry implements BaseColumns {
+
+        public static final String TABLE_NAME = "Alarms";
+
+        // Column with the ID of the Alarms
+        public static final String COLUMN_ID = "ID";
+
+        // The alarm 's time
+        public static final String COLUMN_TIME = "time";
+
+        // The alarm 's state
+        public static final String COLUMN_STATE = "state";
+
+
+
+    }
+
 }

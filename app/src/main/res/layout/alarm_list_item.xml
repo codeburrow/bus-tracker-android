@@ -5,35 +5,36 @@
     android:layout_height="wrap_content"
     >
 
-<RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/list_item_large_margin"
-    android:layout_marginLeft="@dimen/list_item_small_margin"
-    android:layout_marginRight="@dimen/list_item_small_margin"
-    android:padding="@dimen/list_item_large_padding"
-    android:paddingRight="?android:attr/expandableListPreferredItemPaddingLeft"
-    android:background="@drawable/rounded_view_alarm_list_item">
-
-
-    <TextView
-        android:id="@+id/alarm_time_text_view"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/list_item_medium_text_size"
-        android:textColor="@color/colorPrimaryDark"
-        android:layout_alignTop="@+id/alarm_switch"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <android.support.v7.widget.SwitchCompat
-        android:id="@+id/alarm_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_marginTop="@dimen/list_item_large_margin"
+        android:layout_marginLeft="@dimen/list_item_small_margin"
+        android:layout_marginRight="@dimen/list_item_small_margin"
+        android:padding="@dimen/list_item_large_padding"
+        android:longClickable="true"
+        android:paddingRight="?android:attr/expandableListPreferredItemPaddingLeft"
+        android:background="@drawable/rounded_view_alarm_list_item">
 
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/alarm_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/list_item_medium_text_size"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_alignTop="@+id/alarm_switch"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/alarm_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+
+    </RelativeLayout>
 </LinearLayout>

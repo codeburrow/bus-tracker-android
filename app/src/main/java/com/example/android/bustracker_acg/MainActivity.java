@@ -10,12 +10,17 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, RoutesTimesFragment.OnExpandableListItemSelectedListener{
@@ -41,8 +46,12 @@ public class MainActivity extends AppCompatActivity
     SharedPreferences.Editor editor;
     // back pressed flag
     private boolean doubleBackToExitPressedOnce = false;
+    // General Alarm Switch
+    private static SwitchCompat generalAlarmSwitch;
+    // General Alarm State Changed
+    public static boolean generalAlarmStateChanged;
     // Database Helper
-    public final BusTrackerDBHelper db = new BusTrackerDBHelper(this);
+    public static BusTrackerDBHelper db;
 
 
     @Override
@@ -57,22 +66,72 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         toolbar.setLogo(R.mipmap.ic_launcher);
 
-        // set up the drawer
+        // Initialize the BusTrackerDBHelper
+        db = new BusTrackerDBHelper(this);
+
+        // Set up the drawer
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+
+            /** Called when a drawer has settled in a completely closed state. */
+            @Override
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+                Log.e(TAG, "Drawer Close");
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            @Override
+            public void onDrawerOpened(View view) {
+                super.onDrawerOpened(view);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+                Log.e(TAG, "Drawer Open");
+            }
+
+            /** Called when a drawer moves. */
+            @Override
+            public void onDrawerSlide(View view, float slideOffset) {
+                super.onDrawerSlide(view, slideOffset);
+                Log.e(TAG, slideOffset + "");
+
+                if (generalAlarmStateChanged){
+                    Log.e(TAG, "General Alarm State Changed");
+                    generalAlarmStateChanged = false;
+                    generalAlarmSwitch.setChecked(checkAlarms());
+                }
+            }
+        };
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // get SharedPreferences
+        // Find view of alarm switch on drawer
+        generalAlarmSwitch = (SwitchCompat) navigationView.getMenu().getItem(2).getActionView().findViewById(R.id.alarm_switch);
+        generalAlarmSwitch.setChecked(checkAlarms());
+        generalAlarmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // Update auto alarm state to 1 : ON
+                    db.updateAutoAlarm(1);
+                } else {
+                    // Update all alarms states to 0 : OFF
+                    db.updateAlarmStates_Off();
+                }
+                // Update the AlarmFragment
+                displayAlarmUpdated(isChecked);
+            }
+        });
+
+        // Get SharedPreferences
         sharedPreferences = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
-        // check the language
-        languageSetChecked(navigationView);
+        // Check the language
+        checkLanguages(navigationView);
 
         // Display Where is the bus Fragment
         onNavigationItemSelected(navigationView.getMenu().getItem(0));
@@ -195,7 +254,22 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void languageSetChecked(NavigationView navigationView){
+
+    // Check if there is any active alarm
+    public static boolean checkAlarms(){
+        ArrayList<Integer> alarmStatesList = db.getAllAlarmStates();
+
+        for (int alarmState : alarmStatesList) {
+            if( alarmState == 1){
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    // Check which language is selected
+    public void checkLanguages(NavigationView navigationView){
         if (sharedPreferences.getString(LANGUAGE, ENG).equals(GR)){
             navigationView.getMenu().findItem(R.id.nav_greek).setChecked(true);
         } else {
@@ -203,11 +277,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // update fragments when language changes
+    // Update fragments when language changes
     protected void restartActivity(){
         Log.e(TAG, "Ready to Restart");
         try {
-            Thread.sleep(100);
+            Thread.sleep(200);
         } catch (InterruptedException e){
             Log.i(TAG, e.getMessage());
         }
@@ -291,6 +365,16 @@ public class MainActivity extends AppCompatActivity
         fragmentTransaction.commit();
     }
 
+    // Display Updated Alarm Fragment
+    protected void displayAlarmUpdated(boolean isChecked) {
+        if (alarmFragment.isAdded()) {
+            // Update AlarmFragment auto switch - GUI
+            AlarmFragment.autoAlarmSwitch.setChecked(isChecked);
+            // Update AlarmFragment list adapter - GUI
+            AlarmFragment.updateAdapter();
+        }
+    }
+
     // Display FAQ Fragment
     protected void displayFAQ() {
         // Checking for fragment count on back stack
@@ -321,9 +405,6 @@ public class MainActivity extends AppCompatActivity
 
         // Hide routesTimesFragment
         fragmentTransaction.hide(routesTimesFragment);
-//        if (whereIsTheBusFragment.isAdded()) { fragmentTransaction.hide(whereIsTheBusFragment); }
-//        if (routesTimesFragment.isAdded()) { fragmentTransaction.hide(routesTimesFragment); }
-//        if (faqFragment.isAdded()) { fragmentTransaction.hide(faqFragment); }
 
         RoutesTimesMapFragment mapFragment = new RoutesTimesMapFragment();
         Bundle args = new Bundle();

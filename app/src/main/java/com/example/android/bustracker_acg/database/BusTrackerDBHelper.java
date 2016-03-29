@@ -11,6 +11,7 @@ import android.util.Log;
 import com.example.android.bustracker_acg.database.DatabaseContract.RouteStopsEntry;
 import com.example.android.bustracker_acg.database.DatabaseContract.RoutesEntry;
 import com.example.android.bustracker_acg.database.DatabaseContract.SnappedPointsEntry;
+import com.example.android.bustracker_acg.database.DatabaseContract.AlarmsEntry;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -74,10 +75,17 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
                 SnappedPointsEntry.COLUMN_ORIGINAL_INDEX + " TEXT, " +
                 SnappedPointsEntry.COLUMN_PLACE_ID + " TEXT" + " );";
 
+        final String SQL_CREATE_ALARMS_TABLE = "CREATE TABLE " +
+                AlarmsEntry.TABLE_NAME + " (" +
+                AlarmsEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                AlarmsEntry.COLUMN_TIME + " TEXT, " +
+                AlarmsEntry.COLUMN_STATE + " INTEGER" + " );";
+
         try {
             db.execSQL(SQL_CREATE_ROUTES_TABLE);
             db.execSQL(SQL_CREATE_ROUTE_STOPS_TABLE);
             db.execSQL(SQL_CREATE_SNAPPED_POINTS_TABLE);
+            db.execSQL(SQL_CREATE_ALARMS_TABLE);
         } catch (SQLException e){
             Log.e(TAG, e.getMessage());
         }
@@ -95,6 +103,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + RoutesEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + RouteStopsEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SnappedPointsEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + AlarmsEntry.TABLE_NAME);
         onCreate(db);
 
     }
@@ -771,6 +780,319 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
     }
 
 
+    /*
+        All CRUD(Create, Read, Update, Delete) Operations
+        ===== Routes =====
+     */
+
+    // Add an alarm
+    public void addAlarm(String time, int state) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(AlarmsEntry.COLUMN_TIME, time); // time
+        values.put(AlarmsEntry.COLUMN_STATE, state); // state
+
+        // Inserting Row
+        db.insert(AlarmsEntry.TABLE_NAME, null, values);
+        // Closing database connection
+        db.close();
+    }
+
+
+    // Get a single alarmDAO by ID
+    public AlarmDAO getAlarmDAO(int ID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(AlarmsEntry.TABLE_NAME, new String[]{AlarmsEntry.COLUMN_ID,
+                        AlarmsEntry.COLUMN_TIME, AlarmsEntry.COLUMN_STATE},
+                AlarmsEntry.COLUMN_ID + "=?",
+                new String[]{String.valueOf(ID)}, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        AlarmDAO alarmDAO = new AlarmDAO(
+                Integer.parseInt(cursor.getString(0)), // ID
+                cursor.getString(1), // time
+                Integer.parseInt(cursor.getString(2))); // state
+
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route
+        return alarmDAO;
+    }
+
+
+    // Get an AlarmDAO for the auto alarm
+    public AlarmDAO getAutoAlarmDAO() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + AlarmsEntry.TABLE_NAME +
+                " WHERE ID = 1 ;", null);
+
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        AlarmDAO alarmDAO = new AlarmDAO(
+                Integer.parseInt(cursor.getString(0)), // ID
+                cursor.getString(1), // time
+                Integer.parseInt(cursor.getString(2))); // state
+
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route
+        return alarmDAO;
+    }
+
+
+    // Get a single alarmDAO by time
+    public AlarmDAO getAlarmDAO_byTime(String time) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(AlarmsEntry.TABLE_NAME, new String[]{AlarmsEntry.COLUMN_ID,
+                        AlarmsEntry.COLUMN_TIME, AlarmsEntry.COLUMN_STATE},
+                AlarmsEntry.COLUMN_TIME + "=?",
+                new String[]{time}, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        AlarmDAO alarmDAO = new AlarmDAO(
+                Integer.parseInt(cursor.getString(0)), // ID
+                cursor.getString(1), // time
+                Integer.parseInt(cursor.getString(2))); // state
+
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route
+        return alarmDAO;
+    }
+
+
+    // Get all alarms in DAO
+    public ArrayList<AlarmDAO> getAllAlarmsDAO() {
+        ArrayList<AlarmDAO> alarmDAOList = new ArrayList<>();
+
+        // Select All Query
+        String selectQuery = "SELECT  * FROM " + AlarmsEntry.TABLE_NAME;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                AlarmDAO alarmDAO = new AlarmDAO(
+                        Integer.parseInt(cursor.getString(0)), // ID
+                        cursor.getString(1), // time
+                        Integer.parseInt(cursor.getString(2))); // state
+
+
+                // Adding route to list
+                alarmDAOList.add(alarmDAO);
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route list
+        return alarmDAOList;
+    }
+
+
+    // Get all alarms in DAO but first - auto alarm - ID:1
+    public ArrayList<AlarmDAO> getAllAlarmsDAO_autoException() {
+        ArrayList<AlarmDAO> alarmDAOList = new ArrayList<>();
+
+        // Select All Query but the first (AUTO ALARM)
+        String selectQuery = "SELECT  * FROM " + AlarmsEntry.TABLE_NAME +
+                " WHERE ID NOT IN ( 1 );";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                AlarmDAO alarmDAO = new AlarmDAO(
+                        Integer.parseInt(cursor.getString(0)), // ID
+                        cursor.getString(1), // time
+                        Integer.parseInt(cursor.getString(2))); // state
+
+
+                // Adding route to list
+                alarmDAOList.add(alarmDAO);
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route list
+        return alarmDAOList;
+    }
+
+
+    // Get the last alarm entry
+    public AlarmDAO getLastAlarmDAO() {
+        // Select Last alarm Query
+        String selectQuery = "SELECT  * FROM " + AlarmsEntry.TABLE_NAME +
+                " ORDER BY " + AlarmsEntry.COLUMN_ID + " DESC LIMIT 1";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        AlarmDAO alarmDAO = new AlarmDAO(
+                Integer.parseInt(cursor.getString(0)), // ID
+                cursor.getString(1), // time
+                Integer.parseInt(cursor.getString(2))); // state
+
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route
+        return alarmDAO;
+    }
+
+
+    // Count the alarms in SQLite database.
+    public int getAlarmsCount() {
+        String countQuery = "SELECT * FROM " + AlarmsEntry.TABLE_NAME;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int count = cursor.getCount();
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return count
+        return count;
+    }
+
+    // Get all alarms states
+    public ArrayList<Integer> getAllAlarmStates() {
+        ArrayList<Integer> alarmStatesList = new ArrayList<>();
+
+        // Select All Query
+        String selectQuery = "SELECT " + AlarmsEntry.COLUMN_STATE +
+                " FROM " + AlarmsEntry.TABLE_NAME;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                // Adding route to list
+                alarmStatesList.add(Integer.parseInt(cursor.getString(0)));
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route list
+        return alarmStatesList;
+    }
+
+    // Updating single alarm
+    // This method accepts AlarmDAO class object as parameter.
+    public int updateAlarm(AlarmDAO alarmDAO) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(AlarmsEntry.COLUMN_TIME, alarmDAO.getTime());
+        values.put(AlarmsEntry.COLUMN_STATE, alarmDAO.getState());
+
+        // updating row
+        return db.update(AlarmsEntry.TABLE_NAME, values, AlarmsEntry.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(alarmDAO.getID())});
+    }
+
+
+    // Updating auto alarm 's state
+    public int updateAutoAlarm(int alarmState) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + AlarmsEntry.TABLE_NAME +
+                " WHERE ID = 1 ;", null);
+
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        ContentValues values = new ContentValues();
+        values.put(AlarmsEntry.COLUMN_TIME, cursor.getString(1));
+        values.put(AlarmsEntry.COLUMN_STATE, alarmState);
+
+        // Close cursor
+        cursor.close();
+
+        // Updating row
+        return db.update(AlarmsEntry.TABLE_NAME, values, AlarmsEntry.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(1)});
+    }
+
+
+    // Update all alarms states : OFF
+    public void updateAlarmStates_Off() {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(AlarmsEntry.COLUMN_STATE, 0);
+        // Updating db
+        db.update(AlarmsEntry.TABLE_NAME, values, null, null);
+
+        // Closing database connection
+        db.close();
+
+    }
+
+
+    // Deleting single alarm
+    public void deleteAlarm(AlarmDAO alarmDAO) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(AlarmsEntry.TABLE_NAME, AlarmsEntry.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(alarmDAO.getID())});
+        db.close();
+    }
+
+    // Deleting ALL alarms
+    public void deleteAllAlarms() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.execSQL("delete from "+ AlarmsEntry.TABLE_NAME);
+
+        db.close();
+    }
 
 
 }

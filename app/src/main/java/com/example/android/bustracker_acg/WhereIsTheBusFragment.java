@@ -409,6 +409,8 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
 
             } catch (JSONException e) {
                 e.printStackTrace();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
             }
 
             return null;
