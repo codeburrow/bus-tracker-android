@@ -782,7 +782,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
 
     /*
         All CRUD(Create, Read, Update, Delete) Operations
-        ===== Routes =====
+        ===== Alarms =====
      */
 
     // Add an alarm
@@ -822,7 +822,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route
+        // Return alarm
         return alarmDAO;
     }
 
@@ -848,7 +848,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route
+        // Return alarm
         return alarmDAO;
     }
 
@@ -875,7 +875,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route
+        // Return alarm
         return alarmDAO;
     }
 
@@ -890,7 +890,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        // looping through all rows and adding to list
+        // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 AlarmDAO alarmDAO = new AlarmDAO(
@@ -909,7 +909,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route list
+        // Return alarm list
         return alarmDAOList;
     }
 
@@ -925,7 +925,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        // looping through all rows and adding to list
+        // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 AlarmDAO alarmDAO = new AlarmDAO(
@@ -944,7 +944,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route list
+        // Return alarm list
         return alarmDAOList;
     }
 
@@ -973,7 +973,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route
+        // Return alarm
         return alarmDAO;
     }
 
@@ -991,7 +991,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return count
+        // Return count
         return count;
     }
 
@@ -1006,7 +1006,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        // looping through all rows and adding to list
+        // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 // Adding route to list
@@ -1019,7 +1019,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         // Closing cursor
         cursor.close();
 
-        // return route list
+        // Return route list
         return alarmStatesList;
     }
 
@@ -1032,7 +1032,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         values.put(AlarmsEntry.COLUMN_TIME, alarmDAO.getTime());
         values.put(AlarmsEntry.COLUMN_STATE, alarmDAO.getState());
 
-        // updating row
+        // Updating row
         return db.update(AlarmsEntry.TABLE_NAME, values, AlarmsEntry.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(alarmDAO.getID())});
     }

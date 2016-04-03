@@ -118,7 +118,8 @@ public class DatabaseContract {
         // The alarm 's state
         public static final String COLUMN_STATE = "state";
 
-
+        // Auto Alarm Default Time
+        public static final String AUTO_DEFAULT = "NONE";
 
     }
 

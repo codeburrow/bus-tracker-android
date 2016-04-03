@@ -30,10 +30,30 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 
+        <TextView
+            android:id="@+id/auto_alarm_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/small_margin"
+            android:textSize="@dimen/small_text_size"
+            android:textColor="@color/colorPrimary"
+            android:layout_below="@+id/auto_alarm_switch"
+            android:layout_alignRight="@+id/auto_alarm_text_view"
+            android:layout_alignEnd="@+id/auto_alarm_text_view" />
+
         <android.support.v7.widget.SwitchCompat
             android:id="@+id/auto_alarm_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/auto_alarm_settings"/>
+
+        <ImageButton
+            android:id="@+id/auto_alarm_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_settings"
+            android:background="@null"
             android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />

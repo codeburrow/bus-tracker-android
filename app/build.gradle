@@ -21,6 +21,12 @@ android {
     }
 }
 
+repositories {
+    maven {
+        url "http://dl.bintray.com/frakbot/maven"
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
@@ -28,4 +34,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.1'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.google.android.gms:play-services:8.4.0'
+    compile 'net.frakbot:glowpadbackport:2.1.1'
 }

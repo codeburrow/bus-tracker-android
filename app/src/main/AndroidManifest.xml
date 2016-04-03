@@ -63,6 +63,17 @@
             android:name=".MainActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".alarm.AlarmStop"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+
+        <!-- Just need to include the service and receiver for the Alarm -->
+        <service
+            android:name=".alarm.AlarmService"
+            android:enabled="true" />
+
+        <receiver android:name=".alarm.AlarmReceiver" />
 
     </application>
 

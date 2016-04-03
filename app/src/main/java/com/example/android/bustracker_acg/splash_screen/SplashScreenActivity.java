@@ -14,6 +14,7 @@ import com.example.android.bustracker_acg.JSONParser;
 import com.example.android.bustracker_acg.MainActivity;
 import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
+import com.example.android.bustracker_acg.database.DatabaseContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -115,7 +116,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             db = new BusTrackerDBHelper(getApplicationContext());
 
             // Add the auto alarm at ID = 1
-            db.addAlarm("auto", 1);
+            db.addAlarm(DatabaseContract.AlarmsEntry.AUTO_DEFAULT, 1);
 
             try {
                 JSONObject json = jsonParser.getJSONFromUrl(GET_COORDINATES_URL);

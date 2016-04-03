@@ -380,8 +380,21 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                                 .build();
 
                 flyTo(cameraPosition);
-            } catch (Exception e){
-                moveTo(DEREE);
+            } catch (Exception e){  // The last routeStop
+                CameraPosition cameraPosition =
+                        new CameraPosition.Builder()
+                                .target(stationPointLatLngs.get(pointer))
+                                .bearing(
+                                        bearingBetweenLatLngs(
+                                                stationPointLatLngs.get(pointer),
+                                                stationPointLatLngs.get(pointer - 1)
+                                        )
+                                )
+                                .tilt(90)
+                                .zoom(15)
+                                .build();
+
+                flyTo(cameraPosition);
             }
 
             // Fill gMap with the stations of the route

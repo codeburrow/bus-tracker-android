@@ -1,5 +1,8 @@
 package com.example.android.bustracker_acg;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -18,15 +21,23 @@ import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
+import com.example.android.bustracker_acg.alarm.AlarmInterface;
+import com.example.android.bustracker_acg.alarm.AlarmReceiver;
+import com.example.android.bustracker_acg.database.AlarmDAO;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
+import com.example.android.bustracker_acg.database.DatabaseContract;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, RoutesTimesFragment.OnExpandableListItemSelectedListener{
+        implements AlarmInterface, NavigationView.OnNavigationItemSelectedListener,
+        RoutesTimesFragment.OnExpandableListItemSelectedListener,
+        AlarmFragment.OnAutoSettingsButtonListener,
+        SetupAutoAlarmFragment.MinutesPickerDialogFragment.OnAutoAlarmSetListener {
 
     // TAG
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "Main Activity";
     // Drawer
     DrawerLayout drawer;
     // Fragments
@@ -50,6 +61,10 @@ public class MainActivity extends AppCompatActivity
     private static SwitchCompat generalAlarmSwitch;
     // General Alarm State Changed
     public static boolean generalAlarmStateChanged;
+    // Alarm Manager
+    static AlarmManager alarmManager;
+    // Calendar
+    public static Calendar calendar;
     // Database Helper
     public static BusTrackerDBHelper db;
 
@@ -58,6 +73,9 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.e(TAG, "onCreate()");
+
+        // Get Alarm Manager
+        alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
         setContentView(R.layout.activity_main);
 
@@ -68,36 +86,33 @@ public class MainActivity extends AppCompatActivity
 
         // Initialize the BusTrackerDBHelper
         db = new BusTrackerDBHelper(this);
-
+        AlarmDAO alarm = db.getAutoAlarmDAO();
+        alarm.setTime(DatabaseContract.AlarmsEntry.AUTO_DEFAULT);
+        db.updateAlarm(alarm);
         // Set up the drawer
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
 
-            /** Called when a drawer has settled in a completely closed state. */
-            @Override
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-                Log.e(TAG, "Drawer Close");
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            @Override
-            public void onDrawerOpened(View view) {
-                super.onDrawerOpened(view);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-                Log.e(TAG, "Drawer Open");
-            }
+//            /** Called when a drawer has settled in a completely closed state. */
+//            @Override
+//            public void onDrawerClosed(View view) {
+//                super.onDrawerClosed(view);
+//            }
+//
+//            /** Called when a drawer has settled in a completely open state. */
+//            @Override
+//            public void onDrawerOpened(View view) {
+//                super.onDrawerOpened(view);
+//            }
 
             /** Called when a drawer moves. */
             @Override
             public void onDrawerSlide(View view, float slideOffset) {
                 super.onDrawerSlide(view, slideOffset);
-                Log.e(TAG, slideOffset + "");
+//                Log.e(TAG, slideOffset + "");
 
                 if (generalAlarmStateChanged){
-                    Log.e(TAG, "General Alarm State Changed");
                     generalAlarmStateChanged = false;
                     generalAlarmSwitch.setChecked(checkAlarms());
                 }
@@ -115,6 +130,14 @@ public class MainActivity extends AppCompatActivity
         generalAlarmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    // Check custom alarms only
+                    ArrayList<Integer> alarmStatesList = db.getAllAlarmStates();
+                    for (int i = 1; i < alarmStatesList.size(); i ++) {
+                        if( alarmStatesList.get(i) == 1){
+                            return;
+                        }
+                    }
+
                     // Update auto alarm state to 1 : ON
                     db.updateAutoAlarm(1);
                 } else {
@@ -123,6 +146,8 @@ public class MainActivity extends AppCompatActivity
                 }
                 // Update the AlarmFragment
                 displayAlarmUpdated(isChecked);
+                // Update the Actual Alarms
+                actualAlarmsUpdated(isChecked);
             }
         });
 
@@ -175,8 +200,16 @@ public class MainActivity extends AppCompatActivity
         } else {
             //Checking for fragment count on back stack
             if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                getSupportFragmentManager().popBackStack();
-                displayRoutesTimes();
+                if (getSupportFragmentManager().getBackStackEntryAt(0).getName().equals("RouteTimesMapFragment")) {
+                    getSupportFragmentManager().popBackStack();
+                    displayRoutesTimes();
+                } else if (getSupportFragmentManager().getBackStackEntryAt(0).getName().equals("SetupAutoAlarmFragment")) {
+                    getSupportFragmentManager().popBackStack();
+                    displayAlarm();
+                    if (db.getAutoAlarmDAO().getTime().equals(DatabaseContract.AlarmsEntry.AUTO_DEFAULT)){
+                        AlarmFragment.autoAlarmSwitch.setChecked(false);
+                    }
+                }
             } else if (!doubleBackToExitPressedOnce) {
                 this.doubleBackToExitPressedOnce = true;
                 Toast.makeText(this, "Press BACK again to exit.", Toast.LENGTH_SHORT).show();
@@ -366,12 +399,40 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Display Updated Alarm Fragment
-    protected void displayAlarmUpdated(boolean isChecked) {
+    // Returns true if the Fragment is added (FragmentManager) and updated
+    protected boolean displayAlarmUpdated(boolean isChecked) {
         if (alarmFragment.isAdded()) {
             // Update AlarmFragment auto switch - GUI
             AlarmFragment.autoAlarmSwitch.setChecked(isChecked);
             // Update AlarmFragment list adapter - GUI
             AlarmFragment.updateAdapter();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // Update the Actual Alarms
+    protected void actualAlarmsUpdated(boolean isChecked){
+        if (isChecked){
+            AlarmDAO autoAlarm = db.getAutoAlarmDAO();
+            if (autoAlarm.getTime().equals(DatabaseContract.AlarmsEntry.AUTO_DEFAULT)){
+                displayAlarm();
+                displaySetupAutoAlarm();
+                // Close the drawer
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                if (!alarmFragment.isAdded()){
+                    Log.e(TAG, "Main Set Alarm");
+                    setAlarm(autoAlarm);
+                }
+            }
+        } else {
+            ArrayList<AlarmDAO> alarms = db.getAllAlarmsDAO();
+            for (AlarmDAO alarm : alarms){
+                cancelAlarm(alarm);
+            }
         }
     }
 
@@ -400,7 +461,7 @@ public class MainActivity extends AppCompatActivity
         fragmentTransaction.commit();
     }
 
-    protected void displayRouteTimesMapFragment(int groupPosition, int childPosition) {
+    protected void displayRouteTimesMap(int groupPosition, int childPosition) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
         // Hide routesTimesFragment
@@ -415,12 +476,77 @@ public class MainActivity extends AppCompatActivity
         // Add the fragment to the 'activity_schedule' FrameLayout
         // Commit changes
         fragmentTransaction
-                .add(R.id.fragment_container, mapFragment).addToBackStack(null).commit();
+                .add(R.id.fragment_container, mapFragment).addToBackStack("RouteTimesMapFragment").commit();
+    }
+
+    // Display Setup Auto Alarm Fragment
+    public void displaySetupAutoAlarm() {
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+
+        // Hide AlarmFragment
+        fragmentTransaction.hide(alarmFragment);
+
+        SetupAutoAlarmFragment setupAutoAlarmFragment = new SetupAutoAlarmFragment();
+
+        // Add the fragment to the 'activity_schedule' FrameLayout
+        // Commit changes
+        fragmentTransaction
+                .add(R.id.fragment_container, setupAutoAlarmFragment).addToBackStack("SetupAutoAlarmFragment").commit();
     }
 
     // The RoutesTimesFragment interface
     @Override
     public void onExpandableListItemSelected(int groupPosition, int childPosition) {
-        displayRouteTimesMapFragment(groupPosition, childPosition);
+        displayRouteTimesMap(groupPosition, childPosition);
+    }
+
+    // The AlarmFragment interface
+    @Override
+    public void onAutoSettingsButtonClicked() {
+        displaySetupAutoAlarm();
+    }
+
+
+    // The SetupAlarmFragment.MinutesPickerDialogFragment interface
+    @Override
+    public void onAutoAlarmSetClicked() {
+        displayAlarm();
+    }
+
+    @Override
+    public void setAlarm(AlarmDAO alarm) {
+
+        // Get hours and minutes from the AlarmDAO
+        int alarmHours = Integer.parseInt(alarm.getTime().substring(0,2));
+        int alarmMinutes = Integer.parseInt(alarm.getTime().substring(3));
+
+        // Get a Calendar instance
+        calendar = Calendar.getInstance();
+
+        if (calendar.getTime().getHours() > alarmHours) {
+            calendar.add(Calendar.DATE, 1);
+        } else if (calendar.getTime().getHours() == alarmHours) {
+            if (calendar.getTime().getMinutes() >= alarmMinutes) {
+                calendar.add(Calendar.DATE, 1);
+            }
+        }
+
+
+        calendar.set(Calendar.HOUR_OF_DAY, alarmHours);
+        calendar.set(Calendar.MINUTE, alarmMinutes);
+        calendar.set(Calendar.SECOND, 0);
+
+        Log.e(TAG, calendar.getTime().toString());
+
+        Intent alarmReceiverIntent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getID(), alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
+    @Override
+    public void cancelAlarm(AlarmDAO alarm) {
+        Intent alarmReceiverIntent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getID(), alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.cancel(pendingIntent);
     }
 }

@@ -1,9 +1,13 @@
 package com.example.android.bustracker_acg;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -19,10 +23,14 @@ import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.example.android.bustracker_acg.alarm.AlarmInterface;
+import com.example.android.bustracker_acg.alarm.AlarmReceiver;
 import com.example.android.bustracker_acg.database.AlarmDAO;
+import com.example.android.bustracker_acg.database.DatabaseContract;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,25 +39,40 @@ import java.util.Calendar;
  * Created by giorgos on 3/26/2016.
  */
 
-public class AlarmFragment extends Fragment {
+public class AlarmFragment extends Fragment implements AlarmInterface {
 
     // LOG_TAG
     protected static final String TAG = "Alarm Fragment";
     // Construct the data source
-    static ArrayList<AlarmDAO> alarms = new ArrayList<AlarmDAO>();
+    private static ArrayList<AlarmDAO> alarms = new ArrayList<AlarmDAO>();
     // AlarmListAdapter
     protected static AlarmListAdapter alarmListAdapter;
     // Automatic Switch
     protected static SwitchCompat autoAlarmSwitch;
+    // Automatic AlarmDAO
+    private static AlarmDAO autoAlarmDAO;
+    // TextView for Automatic time
+    public static TextView autoAlarmTimeTextView;
     // Calendar
-    Calendar calendar;
+    public static Calendar calendar;
     // Maximum number of alarms
     private static final int MAX_ALARMS = 4;
     // Position in alarms to be deleted
     static int deletePosition;
+    // Alarm Manager
+    static AlarmManager alarmManager;
+    // mCallback – the interface member that contains a reference to the parent activity’s implementation of the interface
+    OnAutoSettingsButtonListener mCallback;
 
     // Every fragment must have a default empty constructor.
-    public AlarmFragment(){}
+    public AlarmFragment() {
+    }
+
+    // OnAutoSettingsButtonListener – this is our interface to communicate back to the activity.
+    // It lets us notify the activity about a selected item
+    public interface OnAutoSettingsButtonListener {
+        public void onAutoSettingsButtonClicked();
+    }
 
 
     /*
@@ -59,6 +82,15 @@ public class AlarmFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         Log.e(TAG, "onAttach()");
+
+        // makes sure the MainActivity implements the callback interface.
+        // If not, it throws an exception
+        try{
+            mCallback = (OnAutoSettingsButtonListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " The MainActivity activity must "
+                    + "implement OnAutoSettingsButtonListener");
+        }
     }
 
     @Override
@@ -66,15 +98,12 @@ public class AlarmFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Log.e(TAG, "onCreate()");
 
-        // Initialize the BusTrackerDBHelper
-//        db = new BusTrackerDBHelper(getActivity());
-
         // Get alarms DAO
         alarms = MainActivity.db.getAllAlarmsDAO_autoException();
-
         // Create the adapter to convert the array to views
         alarmListAdapter = new AlarmListAdapter(getActivity(), alarms);
-
+        // Get Alarm Manager
+        alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
 
     }
 
@@ -94,37 +123,66 @@ public class AlarmFragment extends Fragment {
         // Attach the adapter to the ListView
         final ListView listView = (ListView) view.findViewById(R.id.alarm_list_view);
         listView.setAdapter(alarmListAdapter);
+        // Attach an OnItemLongClickListener to the ListView
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
+                updateAdapter();
 
+                deletePosition = pos;
 
-        autoAlarmSwitch = (SwitchCompat) view.findViewById(R.id.auto_alarm_switch);
-        final AlarmDAO autoAlarmDAO = MainActivity.db.getAutoAlarmDAO();
-        if (autoAlarmDAO.getState() == 1){
-            Log.e("STARTAlarmON", autoAlarmDAO.getID() + " " + autoAlarmDAO.getTime() + " " + autoAlarmDAO.getState());
-            autoAlarmSwitch.setChecked(true);
-        } else {
-            Log.e("STARTAlarmOFF", autoAlarmDAO.getID() + " " + autoAlarmDAO.getTime() + " " + autoAlarmDAO.getState());
-            autoAlarmSwitch.setChecked(false);
-        }
+                DeleteAlarmDialogFragment deleteAlarmDialogFragment = new DeleteAlarmDialogFragment();
+                deleteAlarmDialogFragment.show(getFragmentManager(), "DeleteAlarm");
 
-        autoAlarmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                if (isChecked) {
-                    autoAlarmDAO.setState(1);
-                    MainActivity.db.updateAlarm(autoAlarmDAO);
-                    Log.e("AlarmON", autoAlarmDAO.getID() + " " + autoAlarmDAO.getTime() + " " + autoAlarmDAO.getState());
-                } else {
-                    autoAlarmDAO.setState(0);
-                    MainActivity.db.updateAlarm(autoAlarmDAO);
-                    Log.e("AlarmOFF", autoAlarmDAO.getID() + " " + autoAlarmDAO.getTime() + " " + autoAlarmDAO.getState());
-                }
-
-                MainActivity.generalAlarmStateChanged = true;
+                return true;
             }
-
         });
 
-        ImageButton createAlarmButton = (ImageButton) view.findViewById(R.id.create_alarm_button);
+
+        // Automatic Alarm Switch
+        autoAlarmSwitch = (SwitchCompat) view.findViewById(R.id.auto_alarm_switch);
+        // AutoAlarmTimeTextView
+        autoAlarmTimeTextView = (TextView) view.findViewById(R.id.auto_alarm_time_text_view);
+        // Update setChecked of auto alarm switch
+        updateAutoAlarm();
+
+
+        // Attach an setOnCheckedChangeListener to Automatic Alarm Switch
+        autoAlarmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    if (autoAlarmDAO.getTime().equals(DatabaseContract.AlarmsEntry.AUTO_DEFAULT)){
+                        mCallback.onAutoSettingsButtonClicked();
+                    } else {
+                        MainActivity.db.updateAlarmStates_Off();
+                        MainActivity.db.updateAutoAlarm(1);
+                        setAlarm(autoAlarmDAO);
+                    }
+                } else {
+                    cancelAlarm(autoAlarmDAO);
+                    MainActivity.db.updateAutoAlarm(0);
+                }
+
+                // Update Adapter
+                updateAdapter();
+                // Set flag to true, so the switch on drawer can be updated
+                MainActivity.generalAlarmStateChanged = true;
+            }
+        });
+
+        // Auto alarm settings ImageButton
+        final ImageButton autoSettingsButton = (ImageButton) view.findViewById(R.id.auto_alarm_settings);
+        autoSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(TAG, "Set up your auto alarm settings");
+
+                mCallback.onAutoSettingsButtonClicked();
+            }
+        });
+
+        // Add a new alarm ImageButton
+        final ImageButton createAlarmButton = (ImageButton) view.findViewById(R.id.create_alarm_button);
         createAlarmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -146,26 +204,6 @@ public class AlarmFragment extends Fragment {
             }
 
         });
-
-
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-                                           int pos, long id) {
-                updateAdapter();
-
-                Log.e(TAG, "long clicked position: " + pos);
-
-                deletePosition = pos;
-
-                DeleteAlarmDialogFragment deleteAlarmDialogFragment = new DeleteAlarmDialogFragment();
-                deleteAlarmDialogFragment.show(getFragmentManager(), "DeleteAlarm");
-
-                return true;
-            }
-        });
-
-
     }
 
     @Override
@@ -247,13 +285,16 @@ public class AlarmFragment extends Fragment {
                     */
                     if (view.isShown()) {
                         // Add alarm to db
-                        addAlarm(hourOfDay, minute);
+                        addAlarmListItem(hourOfDay, minute);
+                        // Set Alarm
+                        setAlarm(MainActivity.db.getLastAlarmDAO());
+                        Log.e(TAG, "Alarm ID - first Added: " + MainActivity.db.getLastAlarmDAO().getID());
                     }
                 }
             };
 
 
-    private void addAlarm(int hours, int minutes) {
+    private void addAlarmListItem(int hours, int minutes) {
 
         updateAdapter();
 
@@ -263,73 +304,130 @@ public class AlarmFragment extends Fragment {
                 .append(pad(minutes)).toString();
 
         // Check if the selected time already exists
-        for (AlarmDAO alarm : alarms){
-            if (alarm.getTime().equals(time)){
+        for (AlarmDAO alarm : alarms) {
+            if (alarm.getTime().equals(time)) {
                 Toast.makeText(getActivity(), time + " already exists!", Toast.LENGTH_SHORT).show();
                 return;
             }
         }
 
-        MainActivity.db.addAlarm(time,1);
+        MainActivity.db.addAlarm(time, 1);
         alarmListAdapter.add(MainActivity.db.getLastAlarmDAO());
         alarmListAdapter.notifyDataSetChanged();
         MainActivity.generalAlarmStateChanged = true;
     }
 
-    public static void updateAdapter(){
+
+    @Override
+    public void setAlarm(AlarmDAO alarm) {
+
+        // Get hours and minutes from the AlarmDAO
+        int alarmHours = Integer.parseInt(alarm.getTime().substring(0,2));
+        int alarmMinutes = Integer.parseInt(alarm.getTime().substring(3));
+
+        // Get a calendar instance
+        calendar = Calendar.getInstance();
+
+        if (calendar.getTime().getHours() > alarmHours) {
+            calendar.add(Calendar.DATE, 1);
+        } else if (calendar.getTime().getHours() == alarmHours) {
+            if (calendar.getTime().getMinutes() >= alarmMinutes) {
+                calendar.add(Calendar.DATE, 1);
+            }
+        }
+
+        calendar.set(Calendar.HOUR_OF_DAY, alarmHours);
+        calendar.set(Calendar.MINUTE, alarmMinutes);
+        calendar.set(Calendar.SECOND, 0);
+
+        Log.e(TAG, calendar.getTime().toString());
+
+        Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarm.getID(), alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
+    @Override
+    public void cancelAlarm(AlarmDAO alarm){
+        Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarm.getID(), alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.cancel(pendingIntent);
+    }
+
+
+    public static void updateAdapter() {
         alarmListAdapter.clear();
         alarms = MainActivity.db.getAllAlarmsDAO_autoException();
-        for (AlarmDAO alarm : alarms){
+        for (AlarmDAO alarm : alarms) {
             alarmListAdapter.insert(alarm, alarmListAdapter.getCount());
         }
         alarmListAdapter.notifyDataSetChanged();
     }
 
+    public static void updateAutoAlarm(){
+        // Automatic Alarm DAO
+        autoAlarmDAO = MainActivity.db.getAutoAlarmDAO();
+
+        if (autoAlarmDAO.getState() == 1) {
+            autoAlarmSwitch.setChecked(true);
+        } else {
+            autoAlarmSwitch.setChecked(false);
+        }
+        autoAlarmTimeTextView.setText(autoAlarmDAO.getTime());
+    }
+
+
 
     /**
      * @param c
      * @return the appropriate String representation of the hour or minute.
-     *
+     * <p/>
      * The pad() method that we called from the updateDisplay()
      * It will prefix a zero to the number if it's a single digit
      */
-    private static String pad(int c) {
+    public static String pad(int c) {
         if (c >= 10)
             return String.valueOf(c);
         else
             return "0" + String.valueOf(c);
     }
 
-
+    // DialogFragment for deleting an alarm
     public static class DeleteAlarmDialogFragment extends DialogFragment {
+
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 //            builder.setMessage(R.string.dialog_fire_missiles)
-            builder.setMessage("Delete Alarm: " + alarms.get(deletePosition).getTime() + " ?")
-                    .setPositiveButton("delete", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            Log.e(TAG, "DELETE CLICKED");
+            builder.setTitle("Delete Alarm ?")
+                    .setMessage(alarms.get(deletePosition).getTime())
+                    .setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    Log.e(TAG, "DELETE CLICKED");
 
-                            // Delete the alarm from db
-                            deleteAlarm();
+                                    // Cancel the alarm from alarm manager
+                                    cancelAlarm(alarms.get(deletePosition).getID());
+                                    // Delete the alarm from db
+                                    deleteAlarm();
 
-                        }
+                                }
 
-                        private void deleteAlarm() {
-                            // TEST
-//                            AlarmDAO al = AlarmFragment.alarms.get(deletePosition);
-//                            Log.e(TAG, al.getID() + " " + al.getTime() + " " + al.getState());
+                                private void deleteAlarm() {
+                                    MainActivity.db.deleteAlarm(alarms.get(deletePosition));
+                                    alarmListAdapter.remove(alarms.get(deletePosition));
+                                    alarmListAdapter.notifyDataSetChanged();
+                                    MainActivity.generalAlarmStateChanged = true;
+                                }
 
-
-                            MainActivity.db.deleteAlarm(AlarmFragment.alarms.get(deletePosition));
-                            alarmListAdapter.remove(alarms.get(deletePosition));
-                            alarmListAdapter.notifyDataSetChanged();
-                            MainActivity.generalAlarmStateChanged = true;
-                        }
-                    })
-                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                                public void cancelAlarm(int alarmID) {
+                                    Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
+                                    PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarmID, alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                    alarmManager.cancel(pendingIntent);
+                                }
+                            }
+                    )
+                    .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User cancelled the dialog
                             Log.e(TAG, "CANCEL CLICKED");
@@ -338,7 +436,9 @@ public class AlarmFragment extends Fragment {
             // Create the AlertDialog object and return it
             return builder.create();
         }
+
     }
+
 
 
 }

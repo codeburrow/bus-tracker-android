@@ -21,4 +21,9 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+
+    <!-- Minutes Picker Dialog Fragment-->
+    <string name="ok_button">OK</string>
+    <string name="minutes_question">How many\nminutes earlier?</string>
+
 </resources>
