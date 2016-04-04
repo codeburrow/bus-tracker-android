@@ -164,9 +164,9 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                                 .tilt(45)
                                 .build());
                         // Make the previous one red
-                        markers.get(pointer - 1).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                        markers.get(pointer - 1).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_red_marker));
                         // Change the color and open the info window of the marker
-                        markers.get(pointer).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                        markers.get(pointer).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_blue_marker));
                         markers.get(pointer).showInfoWindow();
                     }
                 }
@@ -203,9 +203,9 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                                 .tilt(45)
                                 .build());
                         // Make the previous one red
-                        markers.get(pointer + 1).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                        markers.get(pointer + 1).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_red_marker));
                         // Change the color and open the info window of the marker
-                        markers.get(pointer).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                        markers.get(pointer).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_blue_marker));
                         markers.get(pointer).showInfoWindow();
 
                     }
@@ -291,6 +291,7 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                         .position(latlng)
                         .title(title)
                         .snippet(snippet)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_red_marker))
         );
         markers.add(marker);
     }
@@ -403,7 +404,7 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                 addMarkerToMap(stationPointLatLngs.get(i), stationPointNames.get(i), stationPointTimes.get(i) + " - " + routeName);
                 // Make the first one blue
                 if (pointer == i){
-                    markers.get(pointer).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                    markers.get(pointer).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_blue_marker));
                     markers.get(pointer).showInfoWindow();
                 }
             }
@@ -423,12 +424,12 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
                 @Override
                 public boolean onMarkerClick(Marker marker) {
                     // Change the previous pointer color
-                    markers.get(pointer).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                    markers.get(pointer).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_red_marker));
                     // Move the pointer to the right marker
                     String markerID = marker.getId().toString();
                     pointer = Integer.parseInt(markerID.substring(1, markerID.length()));
                     // Change the current pointer color
-                    markers.get(pointer).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                    markers.get(pointer).setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_blue_marker));
                     // Show the Info Window of the marker
                     marker.showInfoWindow();
                     // Animate - flyTo this marker

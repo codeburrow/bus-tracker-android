@@ -102,6 +102,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
             // Get the progressBar
             progressBar = (ProgressBar)findViewById(R.id.progressBar);
+//            progressBar.getProgressDrawable().setColorFilter(Color.BLUE, android.graphics.PorterDuff.Mode.SRC_IN);
             progressBar.setMax(progressBarMax);
         }
 
@@ -317,6 +318,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
             // Get the progressBar
             progressBar = (ProgressBar)findViewById(R.id.progressBar);
+//            progressBar.getProgressDrawable().setColorFilter(Color.BLUE, android.graphics.PorterDuff.Mode.SRC_IN);
             progressBar.setMax(100);
         }
 

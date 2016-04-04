@@ -26,4 +26,9 @@
     <string name="ok_button">OK</string>
     <string name="minutes_question">How many\nminutes earlier?</string>
 
+    <!-- Delete Alarm Dialog Fragment-->
+    <string name="delete_alarm_question">Delete Alarm?</string>
+    <string name="delete_button">DELETE</string>
+    <string name="cancel_button">CANCEL</string>
+
 </resources>

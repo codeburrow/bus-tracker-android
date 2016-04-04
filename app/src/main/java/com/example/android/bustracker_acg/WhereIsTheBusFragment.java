@@ -276,7 +276,8 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
 
     private void setMarker(LatLng latLng) {
         marker = gMap.addMarker(new MarkerOptions().position(latLng));
-        marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+//        marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_marker));
         moveTo(CameraPosition.builder()
                 .target(latLng)
                 .zoom(17)
@@ -295,6 +296,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
                         .position(latlng)
                         .title(title)
                         .snippet(snippet)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop_red_marker))
         );
         markers.add(marker);
     }

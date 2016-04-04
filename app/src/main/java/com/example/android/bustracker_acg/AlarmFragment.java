@@ -2,24 +2,23 @@ package com.example.android.bustracker_acg;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SwitchCompat;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -393,49 +392,122 @@ public class AlarmFragment extends Fragment implements AlarmInterface {
     }
 
     // DialogFragment for deleting an alarm
-    public static class DeleteAlarmDialogFragment extends DialogFragment {
+    public static class DeleteAlarmDialogFragment extends DialogFragment implements AlarmInterface {
+
+        // Alarm Time Text View
+        private TextView alarmTimeTextView;
+        // Delete Button
+        private Button deleteButton;
+        // CANCEL Button
+        private Button cancelButton;
+        // AlarmDAO to be deleted
+        private AlarmDAO alarm;
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            super.onCreateView(inflater, container, savedInstanceState);
+
+            View view = inflater.inflate(R.layout.dialog_fragment_delete_alarm, null, false);
+
+            alarm = alarms.get(deletePosition);
+
+            alarmTimeTextView = (TextView) view.findViewById(R.id.alarm_text_view);
+            alarmTimeTextView.setText(alarm.getTime());
+
+            deleteButton = (Button) view.findViewById(R.id.delete_button);
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.e(TAG, "DELETE CLICKED");
+
+                    // Cancel the alarm from alarm manager
+                    cancelAlarm(alarm);
+                    // Delete the alarm from db
+                    deleteAlarm();
+
+                    // Dismiss the Dialog
+                    dismiss();
+                }
+            });
+
+            cancelButton = (Button) view.findViewById(R.id.cancel_button);
+            cancelButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // User cancelled the dialog
+                    Log.e(TAG, "CANCEL CLICKED");
+
+                    // Dismiss the Dialog
+                    dismiss();
+                }
+            });
+
+            getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+
+            return view;
+        }
 
         @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-//            builder.setMessage(R.string.dialog_fire_missiles)
-            builder.setTitle("Delete Alarm ?")
-                    .setMessage(alarms.get(deletePosition).getTime())
-                    .setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int id) {
-                                    Log.e(TAG, "DELETE CLICKED");
+        public void setAlarm(AlarmDAO alarm) {
 
-                                    // Cancel the alarm from alarm manager
-                                    cancelAlarm(alarms.get(deletePosition).getID());
-                                    // Delete the alarm from db
-                                    deleteAlarm();
-
-                                }
-
-                                private void deleteAlarm() {
-                                    MainActivity.db.deleteAlarm(alarms.get(deletePosition));
-                                    alarmListAdapter.remove(alarms.get(deletePosition));
-                                    alarmListAdapter.notifyDataSetChanged();
-                                    MainActivity.generalAlarmStateChanged = true;
-                                }
-
-                                public void cancelAlarm(int alarmID) {
-                                    Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
-                                    PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarmID, alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                    alarmManager.cancel(pendingIntent);
-                                }
-                            }
-                    )
-                    .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
-                            Log.e(TAG, "CANCEL CLICKED");
-                        }
-                    });
-            // Create the AlertDialog object and return it
-            return builder.create();
         }
+
+        @Override
+        public void cancelAlarm(AlarmDAO alarm) {
+            Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarm.getID(), alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            alarmManager.cancel(pendingIntent);
+        }
+
+        private void deleteAlarm() {
+            MainActivity.db.deleteAlarm(alarms.get(deletePosition));
+            alarmListAdapter.remove(alarms.get(deletePosition));
+            alarmListAdapter.notifyDataSetChanged();
+            MainActivity.generalAlarmStateChanged = true;
+        }
+
+//        @Override
+//        public Dialog onCreateDialog(Bundle savedInstanceState) {
+//            // Use the Builder class for convenient dialog construction
+//            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+////            builder.setMessage(R.string.dialog_fire_missiles)
+//            builder.setTitle("Delete Alarm ?")
+//                    .setMessage(alarms.get(deletePosition).getTime())
+//                    .setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+//                                public void onClick(DialogInterface dialog, int id) {
+//                                    Log.e(TAG, "DELETE CLICKED");
+//
+//                                    // Cancel the alarm from alarm manager
+//                                    cancelAlarm(alarms.get(deletePosition).getID());
+//                                    // Delete the alarm from db
+//                                    deleteAlarm();
+//
+//                                }
+//
+//                                private void deleteAlarm() {
+//                                    MainActivity.db.deleteAlarm(alarms.get(deletePosition));
+//                                    alarmListAdapter.remove(alarms.get(deletePosition));
+//                                    alarmListAdapter.notifyDataSetChanged();
+//                                    MainActivity.generalAlarmStateChanged = true;
+//                                }
+//
+//                                public void cancelAlarm(int alarmID) {
+//                                    Intent alarmReceiverIntent = new Intent(getActivity(), AlarmReceiver.class);
+//                                    PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), alarmID, alarmReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//                                    alarmManager.cancel(pendingIntent);
+//                                }
+//                            }
+//                    )
+//                    .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+//                        public void onClick(DialogInterface dialog, int id) {
+//                            // User cancelled the dialog
+//                            Log.e(TAG, "CANCEL CLICKED");
+//                        }
+//                    });
+//            // Create the AlertDialog object and return it
+//            return builder.create();
+//        }
 
     }
 

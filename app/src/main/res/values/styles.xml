@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- Alarm Fragment Switch Compat Color-->
+    <style name="ColorSwitchStyle">
+        <item name="colorControlActivated">@color/colorDrawerSelectedItem</item>
+    </style>
+
 </resources>
