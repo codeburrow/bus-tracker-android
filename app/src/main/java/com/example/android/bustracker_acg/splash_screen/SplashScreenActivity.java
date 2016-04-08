@@ -119,8 +119,8 @@ public class SplashScreenActivity extends AppCompatActivity {
             // Initialize the BusTrackerDBHelper
             db = new BusTrackerDBHelper(getApplicationContext());
 
-            // Add the auto alarm at ID = 1
-            db.addAlarm(DatabaseContract.AlarmsEntry.AUTO_DEFAULT, 1);
+            // Add the auto alarm at ID = 1 - AutoIncrement PrimaryKey
+            db.addAlarm(DatabaseContract.AlarmsEntry.AUTO_DEFAULT, 0);
 
             try {
                 JSONObject json = jsonParser.getJSONFromUrl(GET_COORDINATES_URL);
