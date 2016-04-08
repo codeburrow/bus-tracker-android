@@ -2,6 +2,8 @@ package com.example.android.bustracker_acg;
 
 
 import android.app.Activity;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
+import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -19,14 +23,11 @@ public class FaqFragment extends Fragment {
 
     // LOG_TAG
     protected static final String TAG = "FAQ Fragment";
-    // ExpandableListAdapter
-    private FaqExpandableListAdapter listAdapter;
     // ExpandableListView
     private ExpandableListView expandableListView;
-    // Question
-    private ArrayList<String> listDataHeader;
-    // Answer
-    private HashMap<String, String> listDataChild;
+    // Number of groups in the expandable list view adapter
+    int expandableListViewAdapterSize;
+
 
     // Every fragment must have a default empty constructor.
     public FaqFragment(){}
@@ -77,14 +78,8 @@ public class FaqFragment extends Fragment {
             expandableListView.setIndicatorBoundsRelative(width - GetPixelFromDips(90), width - GetPixelFromDips(30));
         }
 
-        // Preparing list data
-        prepareListData();
-
-        // Initialize the list adapter
-        listAdapter = new FaqExpandableListAdapter(getActivity(), listDataHeader, listDataChild);
-        // Setting list adapter to expandable list view
-        expandableListView.setAdapter(listAdapter);
-
+        SetAdapterAsyncTask setAdapterAsyncTask = new SetAdapterAsyncTask();
+        setAdapterAsyncTask.execute();
 
     }
 
@@ -149,9 +144,13 @@ public class FaqFragment extends Fragment {
             //do when hidden
             Log.e(TAG, "do when hidden");
 
-            // Collapse all the expanded groups when the fragment is hidden
-            for (int i = 0; i <= listAdapter.getGroupCount(); i++){
-                expandableListView.collapseGroup(i);
+            try {
+                // Collapse all the expanded groups when the fragment is hidden
+                for (int i = 0; i <= expandableListViewAdapterSize; i++) {
+                    expandableListView.collapseGroup(i);
+                }
+            }catch (NullPointerException e){
+                Log.e(TAG, "NullPointerException");
             }
 
         } else {
@@ -169,33 +168,57 @@ public class FaqFragment extends Fragment {
         return (int) (pixels * scale + 0.5f);
     }
 
-    /*
-     * Preparing the list data
-     */
-    private void prepareListData() {
-        listDataHeader = new ArrayList<String>();
-        listDataChild = new HashMap<String, String>();
 
-        // Adding header data
-        listDataHeader.add("What is Lorem Ipsum?");
-        listDataHeader.add("Why do we use it?");
-        listDataHeader.add("Where does it come from?");
-        listDataHeader.add("Where can i get some?");
+    private class SetAdapterAsyncTask extends
+            AsyncTask<Void, Void, FaqExpandableListAdapter> {
 
+        // LOG TAG
+        private static final String TAG = "SetAdapterAsyncTask";
 
-        // Adding child data
-        ArrayList<String> answers = new ArrayList<>();
-        answers.add("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
-        answers.add("It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).");
-        answers.add("Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.\n" +
-                "\n" +
-                "The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from \"de Finibus Bonorum et Malorum\" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.");
-        answers.add("There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.");
+        @Override
+        protected FaqExpandableListAdapter doInBackground(Void... params) {
+            // Check SharedPreferences for the language
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.PREFS_FILE, Activity.MODE_PRIVATE);
+            // get the language
+            String language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
+            // ExpandableListAdapter
+            FaqExpandableListAdapter listAdapter;
+            // Questions - headers
+            ArrayList<String> listDataHeader;
+            // Answers - expanded
+            ArrayList<String> answers = new ArrayList<>();
+            HashMap<String, String> listDataChild;
+            // Database Helper
+            BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
 
-        for (int i = 0; i < listDataHeader.size(); i++){
-            listDataChild.put(listDataHeader.get(i), answers.get(i)); // Header, Child data
+            /*
+             * Preparing the list data
+             */
+            listDataHeader = db.getAllFaqQuestions(language);
+            answers = db.getAllFaqAnswers(language);
+            listDataChild = new HashMap<>();
+
+            for (int i = 0; i < listDataHeader.size(); i++){
+                listDataChild.put(listDataHeader.get(i), answers.get(i)); // Header, Child data
+            }
+
+            // Create the custom expandable list adapter
+            listAdapter = new FaqExpandableListAdapter(getActivity(), listDataHeader, listDataChild);
+
+            return listAdapter;
         }
 
-    }
+        @Override
+        protected void onPostExecute(FaqExpandableListAdapter listAdapter) {
+            super.onPostExecute(listAdapter);
+            // Get the number of adapter items
+            expandableListViewAdapterSize = listAdapter.getGroupCount();
+            // Set the adapter to the list view
+            expandableListView.setAdapter(listAdapter);
+        }
+
+
+        }
+
 
 }

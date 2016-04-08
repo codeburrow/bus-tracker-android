@@ -259,6 +259,9 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         gMapReady = true;
         gMap = googleMap;
 
+        gMap.getUiSettings().setMapToolbarEnabled(false);
+        gMap.getUiSettings().setZoomGesturesEnabled(false);
+
         // Default Polyline and Markers - routeStops
         PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
         prepareDataAsyncTask.execute();
@@ -280,7 +283,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_marker));
         moveTo(CameraPosition.builder()
                 .target(latLng)
-                .zoom(17)
+                .zoom(18)
                 .bearing(0)
                 .tilt(0)
                 .build());

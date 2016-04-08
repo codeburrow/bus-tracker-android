@@ -8,10 +8,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.android.bustracker_acg.database.DatabaseContract.AlarmsEntry;
 import com.example.android.bustracker_acg.database.DatabaseContract.RouteStopsEntry;
 import com.example.android.bustracker_acg.database.DatabaseContract.RoutesEntry;
+import com.example.android.bustracker_acg.database.DatabaseContract.FaqEntry;
 import com.example.android.bustracker_acg.database.DatabaseContract.SnappedPointsEntry;
-import com.example.android.bustracker_acg.database.DatabaseContract.AlarmsEntry;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
     }
 
 
-    /*
+    /**
         Called when the database is created for the first time.
      */
     @Override
@@ -75,6 +76,14 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
                 SnappedPointsEntry.COLUMN_ORIGINAL_INDEX + " TEXT, " +
                 SnappedPointsEntry.COLUMN_PLACE_ID + " TEXT" + " );";
 
+        final String SQL_CREATE_FAQ_TABLE = "CREATE TABLE " +
+                FaqEntry.TABLE_NAME + " (" +
+                FaqEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                FaqEntry.COLUMN_QUESTION_ENG + " TEXT, " +
+                FaqEntry.COLUMN_QUESTION_GR + " TEXT, " +
+                FaqEntry.COLUMN_ANSWER_ENG + " TEXT, " +
+                FaqEntry.COLUMN_ANSWER_GR + " TEXT" + " );";
+
         final String SQL_CREATE_ALARMS_TABLE = "CREATE TABLE " +
                 AlarmsEntry.TABLE_NAME + " (" +
                 AlarmsEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -85,6 +94,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
             db.execSQL(SQL_CREATE_ROUTES_TABLE);
             db.execSQL(SQL_CREATE_ROUTE_STOPS_TABLE);
             db.execSQL(SQL_CREATE_SNAPPED_POINTS_TABLE);
+            db.execSQL(SQL_CREATE_FAQ_TABLE);
             db.execSQL(SQL_CREATE_ALARMS_TABLE);
         } catch (SQLException e){
             Log.e(TAG, e.getMessage());
@@ -92,7 +102,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
     }
 
 
-    /*
+    /**
         Called when the database needs to be upgraded.
      */
     @Override
@@ -103,12 +113,13 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + RoutesEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + RouteStopsEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SnappedPointsEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + FaqEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + AlarmsEntry.TABLE_NAME);
         onCreate(db);
 
     }
 
-    /*
+    /**
         All CRUD(Create, Read, Update, Delete) Operations
         ===== Routes =====
      */
@@ -389,7 +400,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
     }
 
 
-    /*
+    /**
         All CRUD(Create, Read, Update, Delete) Operations
         ===== RouteStops =====
      */
@@ -679,7 +690,7 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
     }
 
 
-    /*
+    /**
         All CRUD(Create, Read, Update, Delete) Operations
         ===== SnappedPoints =====
      */
@@ -779,8 +790,136 @@ public class BusTrackerDBHelper extends SQLiteOpenHelper {
         return snappedPointDAOList;
     }
 
+    /**
+     All CRUD(Create, Read, Update, Delete) Operations
+     ===== FAQ =====
+     */
 
-    /*
+    // Add an alarm
+    public void addFaq(int ID, String questionENG, String questionGR, String answerENG, String answerGR) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(FaqEntry.COLUMN_ID, ID); // ID
+        values.put(FaqEntry.COLUMN_QUESTION_ENG, questionENG); // the question in English
+        values.put(FaqEntry.COLUMN_QUESTION_GR, questionGR); // the question in Greek
+        values.put(FaqEntry.COLUMN_ANSWER_ENG, answerENG); // the answer in English
+        values.put(FaqEntry.COLUMN_ANSWER_GR, answerGR); // the answer in Greek
+
+        // Inserting Row
+        db.insert(FaqEntry.TABLE_NAME, null, values);
+        // Closing database connection
+        db.close();
+    }
+
+
+    // getAllFaqDAO() will return all contacts from database
+    // in array list format of FaqDAO class type.
+    // You need to write a for loop to go through each contact.
+    public ArrayList<FaqDAO> getAllFaqDAO() {
+        ArrayList<FaqDAO> faqDAOList = new ArrayList<>();
+
+        // Select All Query
+        String selectQuery = "SELECT  * FROM " + FaqEntry.TABLE_NAME;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                FaqDAO faqDAO = new FaqDAO(
+                        Integer.parseInt(cursor.getString(0)), // ID
+                        cursor.getString(1), // questionENG
+                        cursor.getString(2), // questionGR
+                        cursor.getString(3), // answerENG
+                        cursor.getString(4)); // answerGR
+
+                // Adding route to list
+                faqDAOList.add(faqDAO);
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        // return route list
+        return faqDAOList;
+    }
+
+    // Getting All Faq Questions in Greek || English
+    public ArrayList<String> getAllFaqQuestions(String language){
+        ArrayList<String> faqQuestionsGR = new ArrayList<>();
+
+        // Select questionGR||ENG Query
+        String selectQuery;
+
+        if (language.equalsIgnoreCase("GR")) {
+            selectQuery = "SELECT " + FaqEntry.COLUMN_QUESTION_GR +
+                    " FROM " + FaqEntry.TABLE_NAME;
+        } else {
+            selectQuery = "SELECT " + FaqEntry.COLUMN_QUESTION_ENG +
+                    " FROM " + FaqEntry.TABLE_NAME;
+        }
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // Looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                // Add question to list
+                faqQuestionsGR.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        return faqQuestionsGR;
+    }
+
+    // Getting All Faq Answers in Greek || English
+    public ArrayList<String> getAllFaqAnswers(String language){
+        ArrayList<String> faqQuestionsGR = new ArrayList<>();
+
+        // Select answerGR||ENG Query
+        String selectQuery;
+
+        if (language.equalsIgnoreCase("GR")) {
+            selectQuery = "SELECT " + FaqEntry.COLUMN_ANSWER_GR +
+                    " FROM " + FaqEntry.TABLE_NAME;
+        } else {
+            selectQuery = "SELECT " + FaqEntry.COLUMN_ANSWER_ENG +
+                    " FROM " + FaqEntry.TABLE_NAME;
+        }
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // Looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                // Add question to list
+                faqQuestionsGR.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+
+        // Closing database connection
+        db.close();
+        // Closing cursor
+        cursor.close();
+
+        return faqQuestionsGR;
+    }
+
+
+
+    /**
         All CRUD(Create, Read, Update, Delete) Operations
         ===== Alarms =====
      */

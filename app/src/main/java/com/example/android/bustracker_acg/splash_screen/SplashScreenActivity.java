@@ -15,10 +15,13 @@ import com.example.android.bustracker_acg.MainActivity;
 import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 import com.example.android.bustracker_acg.database.DatabaseContract;
+import com.example.android.bustracker_acg.database.FaqDAO;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by giorgos on 3/11/2016.
@@ -27,14 +30,13 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     // LOG TAG
     private static final String TAG = "SplashScreenActivity";
-    // Custom Secret View
-    private SecretTextView secretTextView;
     // JSON Parser
     JSONParser jsonParser = new JSONParser();
     // ProgressBar
     ProgressBar progressBar;
     int progressBarMax;
-
+    // Custom Secret View
+    private SecretTextView secretTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,14 +89,15 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         // TAG
         private static final String TAG = "DatabaseConnect";
-        // Database Helper
-        BusTrackerDBHelper db;
         // url
         private static final String GET_COORDINATES_URL = "http://ashoka.students.acg.edu/BusTrackerAndroid/webServices/downloadJsonFile.php";
         // success & routes tags (in response)
         private static final String TAG_SUCCESS = "success";
         private static final String TAG_MESSAGE = "message";
         private static final String TAG_ROUTES = "routes";
+        private static final String TAG_FAQ = "faq";
+        // Database Helper
+        BusTrackerDBHelper db;
 
         @Override
         protected void onPreExecute() {
@@ -124,67 +127,86 @@ public class SplashScreenActivity extends AppCompatActivity {
 
                 success = json.getInt(TAG_SUCCESS);
                 if (success == 1) {
-                    Log.d(TAG, "JSON response: " + json.toString());
+                    Log.e(TAG, "JSON response: " + json.toString());
 
-                        JSONArray routesArray = new JSONArray(json.getString(TAG_ROUTES));
-                        JSONObject routeObject;
-                        JSONObject routeStopObject, snappedPointObject;
+                    JSONArray routesArray = new JSONArray(json.getString(TAG_ROUTES));
+                    JSONArray faqArray = new JSONArray(json.getString(TAG_FAQ));
+                    JSONObject routeObject;
+                    JSONObject routeStopObject, snappedPointObject;
+                    JSONObject faqObject;
 
-                        // Fill the Routes Table
-                        for (int i = 0; i < routesArray.length(); i++) {
-                            // Get the JSON object representing the route
-                            routeObject = routesArray.getJSONObject(i);
-                            db.addRoute(
-                                    Integer.parseInt(routeObject.getString("ID")),
-                                    routeObject.getString("nameENG"),
-                                    routeObject.getString("nameGR"),
-                                    routeObject.getString("school")
+                    // Fill the Routes Table
+                    for (int i = 0; i < routesArray.length(); i++) {
+                        // Get the JSON object representing the route
+                        routeObject = routesArray.getJSONObject(i);
+                        db.addRoute(
+                                Integer.parseInt(routeObject.getString("ID")),
+                                routeObject.getString("nameENG"),
+                                routeObject.getString("nameGR"),
+                                routeObject.getString("school")
+                        );
+                        publishProgress(++progress);
+
+
+                        // Fill the RouteStops Table
+                        for (int j = 0; j < routeObject.getJSONArray("routeStops").length(); j++) {
+                            // Get the JSON object representing the stationPoint
+                            routeStopObject = routeObject.getJSONArray("routeStops").getJSONObject(j);
+                            db.addRouteStop(
+                                    Integer.parseInt(routeStopObject.getString("ID")),
+                                    Integer.parseInt(routeStopObject.getString("routeID")),
+                                    routeStopObject.getString("stopTime"),
+                                    routeStopObject.getString("nameOfStopGR"),
+                                    routeStopObject.getString("nameOfStopENG"),
+                                    routeStopObject.getString("description"),
+                                    Double.parseDouble(routeStopObject.getString("lat")),
+                                    Double.parseDouble(routeStopObject.getString("lng"))
                             );
                             publishProgress(++progress);
-
-
-                            // Fill the RouteStops Table
-                            for (int j = 0; j < routeObject.getJSONArray("routeStops").length(); j++) {
-                                // Get the JSON object representing the stationPoint
-                                routeStopObject = routeObject.getJSONArray("routeStops").getJSONObject(j);
-                                db.addRouteStop(
-                                        Integer.parseInt(routeStopObject.getString("ID")),
-                                        Integer.parseInt(routeStopObject.getString("routeID")),
-                                        routeStopObject.getString("stopTime"),
-                                        routeStopObject.getString("nameOfStopGR"),
-                                        routeStopObject.getString("nameOfStopENG"),
-                                        routeStopObject.getString("description"),
-                                        Double.parseDouble(routeStopObject.getString("lat")),
-                                        Double.parseDouble(routeStopObject.getString("lng"))
-                                );
-                                publishProgress(++progress);
-                            }
-
-                            // Fill the SnappedPoints Table
-                            for (int z = 0; z < routeObject.getJSONArray("snappedPoints").length(); z++) {
-                                // Get the JSON object representing the snappedPoint
-                                snappedPointObject = routeObject.getJSONArray("snappedPoints").getJSONObject(z);
-                                db.addSnappedPoint(
-                                        Integer.parseInt(snappedPointObject.getString("routeID")),
-                                        Double.parseDouble(snappedPointObject.getJSONObject("location").getString("latitude")),
-                                        Double.parseDouble(snappedPointObject.getJSONObject("location").getString("longitude")),
-                                        snappedPointObject.getString("originalIndex"),
-                                        snappedPointObject.getString("placeID")
-                                );
-                                publishProgress(++progress);
-                            }
-
                         }
 
+                        // Fill the SnappedPoints Table
+                        for (int z = 0; z < routeObject.getJSONArray("snappedPoints").length(); z++) {
+                            // Get the JSON object representing the snappedPoint
+                            snappedPointObject = routeObject.getJSONArray("snappedPoints").getJSONObject(z);
+                            db.addSnappedPoint(
+                                    Integer.parseInt(snappedPointObject.getString("routeID")),
+                                    Double.parseDouble(snappedPointObject.getJSONObject("location").getString("latitude")),
+                                    Double.parseDouble(snappedPointObject.getJSONObject("location").getString("longitude")),
+                                    snappedPointObject.getString("originalIndex"),
+                                    snappedPointObject.getString("placeID")
+                            );
+                            publishProgress(++progress);
+                        }
 
-                    // testing
-//                    asyncTaskTesting();
+                    }
 
+                    // Fill the Faq Table
+                    for (int i = 0; i < faqArray.length(); i++) {
+                        // Get the JSON object representing the faq
+                        faqObject = faqArray.getJSONObject(i);
+                        db.addFaq(
+                                Integer.parseInt(faqObject.getString("ID")),
+                                faqObject.getString("questionENG"),
+                                faqObject.getString("questionGR"),
+                                faqObject.getString("answerENG"),
+                                faqObject.getString("answerGR")
+                        );
+                        publishProgress(++progress);
+                    }
+
+                    /**
+                     *    == TESTING ==
+                     */
+                    asyncTaskTesting();
+
+
+                    // Close the database
                     db.close();
 
                     return json.getString(TAG_ROUTES);
                 } else {
-                    Log.d(TAG,"Retrieving Failure! " + json.getString(TAG_MESSAGE));
+                    Log.e(TAG,"Retrieving Failure! " + json.getString(TAG_MESSAGE));
                 }
 
             } catch (JSONException e) {
@@ -198,7 +220,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-//            Log.e(TAG, "onProgressUpdate(): " + String.valueOf(values[0]));
+            Log.e(TAG, "onProgressUpdate(): " + String.valueOf(values[0]));
 
             // Update the progress bar's progress
             progressBar.setProgress(values[0]);
@@ -216,19 +238,23 @@ public class SplashScreenActivity extends AppCompatActivity {
                 // Start the main activity
                 startMain();
             } else {
-
+                Log.e(TAG, "Something is wrong?");
             }
         }
 
-//        // Testing Method
-//        public void asyncTaskTesting(){
-//
+        /**
+         *  == Testing Method =====> LOG.everything
+         */
+        public void asyncTaskTesting(){
+
 //            // Show the routes
 //            Log.e("Routes_Table", "Reading All Routes");
 //            ArrayList<RouteDAO> routes = db.getAllRoutesDAO();
 //            for (RouteDAO routeDAO : routes){
-//                String log = "ID: " + routeDAO.getID() + ", NameGR: " + routeDAO.getNameGR() +
-//                        ", NameENG: " + routeDAO.getNameENG() + ", School: " + routeDAO.getSchool();
+//                String log = "ID: " + routeDAO.getID() +
+//                        ", NameGR: " + routeDAO.getNameGR() +
+//                        ", NameENG: " + routeDAO.getNameENG() +
+//                        ", School: " + routeDAO.getSchool();
 //                Log.e("Route", log);
 //            }
 //
@@ -259,8 +285,20 @@ public class SplashScreenActivity extends AppCompatActivity {
 //                        ", PlaceID: " + snappedPoint.getPlaceID();
 //                Log.e("RouteStop", log);
 //            }
-//
-//        }
+
+            // Show the Faq
+            Log.e("Faq_Table", "Reading All Faq");
+            ArrayList<FaqDAO> faq = db.getAllFaqDAO();
+            for (FaqDAO faqDAO : faq){
+                String log = "ID: " + faqDAO.getID() +
+                        ", QuestionENG: " + faqDAO.getQuestionENG() +
+                        ", QuestionGR: " + faqDAO.getQuestionGR() +
+                        ", AnswerENG: " + faqDAO.getAnswerENG() +
+                        ", AnswerGR: " + faqDAO.getAnswerGR();
+                Log.e("Faq", log);
+            }
+
+        }
 
     }
 
@@ -325,6 +363,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
 
+            // Update the progress bar ( +2/100 ) every 20 ms
             int i = 0;
             while (i <= 50) {
                 try {

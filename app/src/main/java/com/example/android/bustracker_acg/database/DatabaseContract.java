@@ -20,7 +20,7 @@ public class DatabaseContract {
         return time.setJulianDay(julianDay);
     }
 
-    /*
+    /**
         Inner class that defines the table contents of the Routes table
      */
     public static final class RoutesEntry implements BaseColumns {
@@ -41,7 +41,7 @@ public class DatabaseContract {
 
     }
 
-    /*
+    /**
         Inner class that defines the table contents of the RouteStops table
      */
     public static final class RouteStopsEntry implements BaseColumns {
@@ -74,7 +74,7 @@ public class DatabaseContract {
 
     }
 
-    /*
+    /**
         Inner class that defines the table contents of the SnappedPoints table
      */
     public static final class SnappedPointsEntry implements BaseColumns {
@@ -101,8 +101,32 @@ public class DatabaseContract {
 
     }
 
+    /**
+        Inner class that defines the table contents of the Routes table
+     */
+    public static final class FaqEntry implements BaseColumns {
 
-    /*
+        public static final String TABLE_NAME = "FAQ";
+
+        // Column with the ID of the FAQ
+        public static final String COLUMN_ID = "ID";
+
+        // The question in Greek
+        public static final String COLUMN_QUESTION_GR = "questionGR";
+
+        // The question in English
+        public static final String COLUMN_QUESTION_ENG = "questionENG";
+
+        // The answer in Greek
+        public static final String COLUMN_ANSWER_GR = "answerGR";
+
+        // The answer in English
+        public static final String COLUMN_ANSWER_ENG = "answerENG";
+
+    }
+
+
+    /**
         Inner class that defines the table contents of the Alarms table
      */
     public static final class AlarmsEntry implements BaseColumns {

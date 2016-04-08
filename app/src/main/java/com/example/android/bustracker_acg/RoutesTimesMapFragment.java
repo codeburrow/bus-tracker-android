@@ -278,6 +278,7 @@ public class RoutesTimesMapFragment extends Fragment implements OnMapReadyCallba
         gMapReady = true;
         gMap = googleMap;
 
+        gMap.getUiSettings().setZoomControlsEnabled(true);
     }
 
 

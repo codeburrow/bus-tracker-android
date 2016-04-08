@@ -20,7 +20,7 @@ public class RouteDAO {
     private String school;
 
 
-    /*
+    /**
         Constructors
     */
     // Constructor: Empty
@@ -34,7 +34,7 @@ public class RouteDAO {
         this.school = school;
     }
 
-    /*
+    /**
         Setters & Getters
     */
     public int getID(){

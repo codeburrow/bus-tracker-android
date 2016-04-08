@@ -176,9 +176,13 @@ public class RoutesTimesFragment extends Fragment {
             //do when hidden
             Log.e(TAG, "do when hidden");
 
-            // Collapse all the expanded groups when the fragment is hidden
-            for (int i = 0; i <= expandableListViewAdapterSize; i++){
-                expandableListView.collapseGroup(i);
+            try {
+                // Collapse all the expanded groups when the fragment is hidden
+                for (int i = 0; i <= expandableListViewAdapterSize; i++) {
+                    expandableListView.collapseGroup(i);
+                }
+            } catch (NullPointerException e){
+                Log.e(TAG, "NullPointerException");
             }
         } else {
             //do when shown
