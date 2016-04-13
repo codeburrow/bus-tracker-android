@@ -101,10 +101,72 @@ public class RoutesTimesFragment extends Fragment {
             expandableListView.setIndicatorBoundsRelative(width - GetPixelFromDips(90), width - GetPixelFromDips(30));
         }
 
-        SetAdapterAsyncTask setAdapterAsyncTask = new SetAdapterAsyncTask();
-        setAdapterAsyncTask.execute();
+//        SetAdapterAsyncTask setAdapterAsyncTask = new SetAdapterAsyncTask();
+//        setAdapterAsyncTask.execute();
+
+        setAdapterForeground();
+    }
+
+    private void setAdapterForeground(){
+        // Check SharedPreferences for the language
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.PREFS_FILE, Activity.MODE_PRIVATE);
+        // get the language
+        String language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
+        // ExpandableListAdapter
+        RoutesTimesExpandableListAdapter listAdapter;
+        // Routes Header
+        ArrayList<String> listDataHeader;
+        // Routes Info - Times & Stations
+        HashMap<String, ArrayList<String>> listDataChildStation, listDataChildTime;
+        // Database Helper
+        BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
+
+            /*
+             * Preparing the list data
+             */
+        if (language.equals(MainActivity.GR)) {
+            listDataHeader = db.getAllRouteNamesGR();
+        } else {
+            listDataHeader = db.getAllRouteNamesENG();
+        }
+        listDataChildStation=new HashMap<>();
+        listDataChildTime=new HashMap<>();
+
+
+        for(int i = 0; i < listDataHeader.size(); i++){
+            if (language.equals(MainActivity.GR)) {
+                listDataChildStation.put(listDataHeader.get(i), db.getAllRouteStopNamesGR(i + 1));
+            } else if (language.equals(MainActivity.ENG)){
+                listDataChildStation.put(listDataHeader.get(i), db.getAllRouteStopNamesENG(i + 1));
+            }
+            listDataChildTime.put(listDataHeader.get(i), db.getAllRouteStopTimes(i + 1));
+        }
+
+        // Create the custom expandable list adapter
+        listAdapter = new RoutesTimesExpandableListAdapter(getActivity(),
+                listDataHeader,
+                listDataChildStation,
+                listDataChildTime);
+
+        expandableListViewAdapterSize = listAdapter.getGroupCount();
+
+        expandableListView.setAdapter(listAdapter);
+
+        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v,
+                                        int groupPosition, int childPosition, long id) {
+                mCallback.onExpandableListItemSelected(groupPosition, childPosition);
+
+                return false;
+            }
+        });
 
     }
+
+
+
+
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -264,6 +326,5 @@ public class RoutesTimesFragment extends Fragment {
 
         }
     }
-
 
 }
