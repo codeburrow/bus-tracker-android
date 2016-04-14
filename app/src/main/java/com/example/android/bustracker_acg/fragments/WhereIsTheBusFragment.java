@@ -251,7 +251,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         gMap = googleMap;
 
         gMap.getUiSettings().setMapToolbarEnabled(false);
-        gMap.getUiSettings().setZoomGesturesEnabled(false);
+//        gMap.getUiSettings().setZoomGesturesEnabled(false);
 
         // Default Polyline and Markers - routeStops
         PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
