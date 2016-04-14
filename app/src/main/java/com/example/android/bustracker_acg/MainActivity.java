@@ -93,11 +93,6 @@ public class MainActivity extends AppCompatActivity
         // Initialize the BusTrackerDBHelper
         db = new BusTrackerDBHelper(this);
 
-        // Set Automatic alarm to NONE
-//        AlarmDAO alarm = db.getAutoAlarmDAO();
-//        alarm.setTime(DatabaseContract.AlarmsEntry.AUTO_DEFAULT);
-//        db.updateAlarm(alarm);
-
         // Set up the drawer
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

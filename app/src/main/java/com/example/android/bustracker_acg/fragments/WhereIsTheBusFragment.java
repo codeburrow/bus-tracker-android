@@ -7,15 +7,17 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ListView;
 
 import com.example.android.bustracker_acg.JSONParser;
 import com.example.android.bustracker_acg.MainActivity;
@@ -51,11 +53,11 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     // LOG_TAG
     protected static final String TAG = "WITB Fragment";
     // Route Names for the popup menu
-    private ArrayList<String> routeNames;
+    private static ArrayList<String> routeNames;
     // Selected RouteName
-    private String routeShown;
+    private static String routeShown;
     // Google Map
-    GoogleMap gMap;
+    static GoogleMap gMap;
     boolean gMapReady = false;
     // DEREE camera position
     static final CameraPosition DEREE = CameraPosition.builder()
@@ -65,24 +67,24 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
             .tilt(0)
             .build();
     // Marker
-    Marker marker;
+    static Marker marker;
     // Timer & TimerTask
     Timer timer;
     TimerTask timerTask;
     // Handler to be used in TimerTask
     final Handler handler = new Handler();
     // ArrayLists
-    private String routeName;
-    private ArrayList<String> stationPointNames;
-    private ArrayList<String> stationPointTimes;
-    private ArrayList<LatLng> stationPointLatLngs;
-    private ArrayList<LatLng> snappedPointLatLngs;
+    private static String routeName;
+    private static ArrayList<String> stationPointNames;
+    private static ArrayList<String> stationPointTimes;
+    private static ArrayList<LatLng> stationPointLatLngs;
+    private static ArrayList<LatLng> snappedPointLatLngs;
     // markers list
-    private ArrayList<Marker> markers = new ArrayList<>();
+    private static ArrayList<Marker> markers = new ArrayList<>();
     // Route Polyline
-    PolylineOptions routePolyline;
+    static PolylineOptions routePolyline;
     // Language selected
-    String language;
+    static String language;
 
     /*
     Every fragment must have a default empty constructor.
@@ -149,23 +151,9 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         chooseRouteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                PopupMenu popup = new PopupMenu(getActivity(), view);
-                Menu popupMenu = popup.getMenu();
-                for (int i = 0; i < routeNames.size(); i++) {
-                    popupMenu.add(routeNames.get(i));
-                }
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        // Update the routeShown
-                        routeShown = item.toString();
-                        // AsyncTask to get the appropriate routeStops and Polyline
-                        PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
-                        prepareDataAsyncTask.execute();
-                        return true;
-                    }
-                });
-                popup.show();
+
+                ListDialogFragment listDialogFragment = new ListDialogFragment();
+                listDialogFragment.show(getFragmentManager(), "list_dialog");
 
             }
         });
@@ -297,7 +285,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
      * @param title - the name of the station (RouteStop)
      * @param snippet - the time of the RouteStop and the routeName
      */
-    public void addMarkerToMap(LatLng latlng, String title, String snippet){
+    public static void addMarkerToMap(LatLng latlng, String title, String snippet){
         Marker marker = gMap.addMarker(new MarkerOptions()
                         .position(latlng)
                         .title(title)
@@ -443,7 +431,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
     }
 
 
-    private class PrepareDataAsyncTask extends
+    private static class PrepareDataAsyncTask extends
             AsyncTask<Void, Void, Void> {
 
         // LOG TAG
@@ -452,7 +440,7 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
         @Override
         protected Void doInBackground(Void... params) {
             // Database Helper
-            BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
+            BusTrackerDBHelper db = MainActivity.db;
             // roueID
             int routeID;
 
@@ -505,6 +493,50 @@ public class WhereIsTheBusFragment extends Fragment implements OnMapReadyCallbac
             gMap.addPolyline(routePolyline);
 
         }
+    }
+
+
+    public static class ListDialogFragment extends DialogFragment implements
+            AdapterView.OnItemClickListener {
+
+
+
+        ListView routesListView;
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View view = inflater.inflate(R.layout.list_dialog_fragment, null, false);
+            routesListView = (ListView) view.findViewById(R.id.listView);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+                    R.layout.list_dialog_item, routeNames);
+
+            routesListView.setAdapter(adapter);
+
+            routesListView.setOnItemClickListener(this);
+
+
+            getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+            return view;
+        }
+
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position,
+                                long id) {
+
+            // Update the routeShown
+            routeShown = routeNames.get(position);
+            Log.e("ListDialog: ", routeShown);
+            // AsyncTask to get the appropriate routeStops and Polyline
+            PrepareDataAsyncTask prepareDataAsyncTask = new PrepareDataAsyncTask();
+            prepareDataAsyncTask.execute();
+
+            dismiss();
+        }
+
     }
 
 
