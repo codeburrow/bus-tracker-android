@@ -8,9 +8,6 @@ import android.text.Spanned;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-/**
- * Created by giorgos on 3/11/2016.
- */
 
 public class SecretTextView extends TextView {
     private String mTextString;

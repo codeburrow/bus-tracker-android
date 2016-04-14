@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.alarm;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -13,16 +13,13 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
-import com.example.android.bustracker_acg.alarm.AlarmInterface;
-import com.example.android.bustracker_acg.alarm.AlarmReceiver;
+import com.example.android.bustracker_acg.MainActivity;
+import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.AlarmDAO;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 
-/**
- * Created by giorgos on 3/26/2016.
- */
 
 public class AlarmListAdapter extends ArrayAdapter<AlarmDAO> implements AlarmInterface {
 

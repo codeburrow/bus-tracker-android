@@ -13,9 +13,6 @@ import android.util.Log;
 
 import java.io.IOException;
 
-/**
- * Created by giorgos on 3/31/2016.
- */
 
 public class AlarmReceiver extends WakefulBroadcastReceiver {
 

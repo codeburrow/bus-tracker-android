@@ -11,9 +11,6 @@ import android.util.Log;
 import com.example.android.bustracker_acg.MainActivity;
 import com.example.android.bustracker_acg.R;
 
-/**
- * Created by giorgos on 3/31/2016.
- */
 
 public class AlarmService extends IntentService {
 

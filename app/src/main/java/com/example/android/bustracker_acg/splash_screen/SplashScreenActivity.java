@@ -23,9 +23,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-/**
- * Created by giorgos on 3/11/2016.
- */
+
 public class SplashScreenActivity extends AppCompatActivity {
 
     // LOG TAG

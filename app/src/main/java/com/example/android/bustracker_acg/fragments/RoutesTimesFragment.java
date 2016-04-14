@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.fragments;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -13,14 +13,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
+import com.example.android.bustracker_acg.MainActivity;
+import com.example.android.bustracker_acg.R;
+import com.example.android.bustracker_acg.adapters.RoutesTimesExpandableListAdapter;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * Created by giorgos on 3/18/2016.
- */
 
 public class RoutesTimesFragment extends Fragment {
 

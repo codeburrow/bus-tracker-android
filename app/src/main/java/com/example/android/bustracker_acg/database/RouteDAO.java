@@ -1,8 +1,6 @@
 package com.example.android.bustracker_acg.database;
 
 /**
- * Created by giorgos on 3/19/2016.
-
  * A route Data Access Object
  * (so we can manipulate the result of a select query)
  */

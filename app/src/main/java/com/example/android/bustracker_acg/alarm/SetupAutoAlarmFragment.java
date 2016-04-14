@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.alarm;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -20,8 +20,9 @@ import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.NumberPicker;
 
-import com.example.android.bustracker_acg.alarm.AlarmInterface;
-import com.example.android.bustracker_acg.alarm.AlarmReceiver;
+import com.example.android.bustracker_acg.MainActivity;
+import com.example.android.bustracker_acg.R;
+import com.example.android.bustracker_acg.adapters.RoutesTimesExpandableListAdapter;
 import com.example.android.bustracker_acg.database.AlarmDAO;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 
@@ -29,9 +30,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
-/**
- * Created by giorgos on 4/1/2016.
- */
 
 public class SetupAutoAlarmFragment extends Fragment {
 

@@ -17,12 +17,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
-/**
- * Created by giorgos on 3/18/2016.
- */
 
-/*
-    Manages a local database for bus tracker data
+/**
+ *   Manages a local database for bus tracker data
  */
 
 public class BusTrackerDBHelper extends SQLiteOpenHelper {

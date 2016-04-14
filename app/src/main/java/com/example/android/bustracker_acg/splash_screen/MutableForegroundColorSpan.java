@@ -4,9 +4,6 @@ import android.text.TextPaint;
 import android.text.style.CharacterStyle;
 import android.text.style.UpdateAppearance;
 
-/**
- * Created by giorgos on 3/11/2016.
- */
 
 public class MutableForegroundColorSpan extends CharacterStyle
         implements UpdateAppearance {

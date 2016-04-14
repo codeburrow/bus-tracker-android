@@ -23,12 +23,6 @@
     <!-- Allows applications to disable the keyguard if it is not secure.-->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
-    <!--
-    The following 2 permissions are not required to use Google Maps Android API v2,
-    but are recommended.
-    -->
-    <!-- Allows an app to access precise location. -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature
         android:glEsVersion="0x00020000"

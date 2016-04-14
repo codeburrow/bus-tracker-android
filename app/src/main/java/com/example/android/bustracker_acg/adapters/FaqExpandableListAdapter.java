@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.adapters;
 
 
 import android.content.Context;
@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
+
+import com.example.android.bustracker_acg.R;
 
 import java.util.HashMap;
 import java.util.List;

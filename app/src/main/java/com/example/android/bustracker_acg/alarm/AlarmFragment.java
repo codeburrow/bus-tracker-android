@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.alarm;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -26,17 +26,14 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.example.android.bustracker_acg.alarm.AlarmInterface;
-import com.example.android.bustracker_acg.alarm.AlarmReceiver;
+import com.example.android.bustracker_acg.MainActivity;
+import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.AlarmDAO;
 import com.example.android.bustracker_acg.database.DatabaseContract;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 
-/**
- * Created by giorgos on 3/26/2016.
- */
 
 public class AlarmFragment extends Fragment implements AlarmInterface {
 
@@ -47,7 +44,7 @@ public class AlarmFragment extends Fragment implements AlarmInterface {
     // AlarmListAdapter
     protected static AlarmListAdapter alarmListAdapter;
     // Automatic Switch
-    protected static SwitchCompat autoAlarmSwitch;
+    public static SwitchCompat autoAlarmSwitch;
     // Automatic AlarmDAO
     private static AlarmDAO autoAlarmDAO;
     // TextView for Automatic time

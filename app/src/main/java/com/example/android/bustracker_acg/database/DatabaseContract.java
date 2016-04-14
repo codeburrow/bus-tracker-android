@@ -3,10 +3,6 @@ package com.example.android.bustracker_acg.database;
 import android.provider.BaseColumns;
 import android.text.format.Time;
 
-/**
- * Created by giorgos on 3/18/2016.
- */
-
 public class DatabaseContract {
 
     // To make it easy to query for the exact date,

@@ -1,4 +1,4 @@
-package com.example.android.bustracker_acg;
+package com.example.android.bustracker_acg.fragments;
 
 
 import android.app.Activity;
@@ -14,6 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
+import com.example.android.bustracker_acg.adapters.FaqExpandableListAdapter;
+import com.example.android.bustracker_acg.MainActivity;
+import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 
 import java.util.ArrayList;

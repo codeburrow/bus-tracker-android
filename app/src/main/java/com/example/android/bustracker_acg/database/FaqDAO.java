@@ -1,10 +1,6 @@
 package com.example.android.bustracker_acg.database;
 
 /**
- * Created by giorgos on 4/8/2016.
- */
-
-/**
  *  A Faq Data Access Object
  */
 

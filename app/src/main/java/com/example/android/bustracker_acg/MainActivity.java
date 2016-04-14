@@ -26,6 +26,12 @@ import com.example.android.bustracker_acg.alarm.AlarmReceiver;
 import com.example.android.bustracker_acg.database.AlarmDAO;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 import com.example.android.bustracker_acg.database.DatabaseContract;
+import com.example.android.bustracker_acg.alarm.AlarmFragment;
+import com.example.android.bustracker_acg.fragments.FaqFragment;
+import com.example.android.bustracker_acg.fragments.RoutesTimesFragment;
+import com.example.android.bustracker_acg.fragments.RoutesTimesMapFragment;
+import com.example.android.bustracker_acg.alarm.SetupAutoAlarmFragment;
+import com.example.android.bustracker_acg.fragments.WhereIsTheBusFragment;
 
 import java.util.ArrayList;
 import java.util.Calendar;

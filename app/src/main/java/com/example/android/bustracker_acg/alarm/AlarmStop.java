@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.example.android.bustracker_acg.AlarmFragment;
 import com.example.android.bustracker_acg.R;
 import com.example.android.bustracker_acg.database.AlarmDAO;
 import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
@@ -14,10 +13,6 @@ import com.example.android.bustracker_acg.database.BusTrackerDBHelper;
 import net.frakbot.glowpadbackport.GlowPadView;
 
 import java.util.Calendar;
-
-/**
- * Created by giorgos on 3/31/2016.
- */
 
 public class AlarmStop extends AppCompatActivity {
 
