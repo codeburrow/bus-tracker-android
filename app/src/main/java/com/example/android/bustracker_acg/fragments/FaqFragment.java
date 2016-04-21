@@ -81,8 +81,47 @@ public class FaqFragment extends Fragment {
             expandableListView.setIndicatorBoundsRelative(width - GetPixelFromDips(90), width - GetPixelFromDips(30));
         }
 
-        SetAdapterAsyncTask setAdapterAsyncTask = new SetAdapterAsyncTask();
-        setAdapterAsyncTask.execute();
+//        SetAdapterAsyncTask setAdapterAsyncTask = new SetAdapterAsyncTask();
+//        setAdapterAsyncTask.execute();
+
+        setAdapterForeground();
+
+    }
+
+    private void setAdapterForeground(){
+
+        // Check SharedPreferences for the language
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(MainActivity.PREFS_FILE, Activity.MODE_PRIVATE);
+        // get the language
+        String language = sharedPreferences.getString(MainActivity.LANGUAGE, MainActivity.ENG);
+        // ExpandableListAdapter
+        FaqExpandableListAdapter listAdapter;
+        // Questions - headers
+        ArrayList<String> listDataHeader;
+        // Answers - expanded
+        ArrayList<String> answers = new ArrayList<>();
+        HashMap<String, String> listDataChild;
+        // Database Helper
+        BusTrackerDBHelper db = new BusTrackerDBHelper(getActivity());
+
+            /*
+             * Preparing the list data
+             */
+        listDataHeader = db.getAllFaqQuestions(language);
+        answers = db.getAllFaqAnswers(language);
+        listDataChild = new HashMap<>();
+
+        for (int i = 0; i < listDataHeader.size(); i++){
+            listDataChild.put(listDataHeader.get(i), answers.get(i)); // Header, Child data
+        }
+
+        // Create the custom expandable list adapter
+        listAdapter = new FaqExpandableListAdapter(getActivity(), listDataHeader, listDataChild);
+
+        // Get the number of adapter items
+        expandableListViewAdapterSize = listAdapter.getGroupCount();
+        // Set the adapter to the list view
+        expandableListView.setAdapter(listAdapter);
 
     }
 
